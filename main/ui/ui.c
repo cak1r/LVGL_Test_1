@@ -5,6 +5,7 @@
 
 #include "ui.h"
 #include "ui_helpers.h"
+#include "lvgl.h"
 
 ///////////////////// VARIABLES ////////////////////
 
@@ -20,19 +21,37 @@ lv_obj_t * ui_loadingSpinner;
 // SCREEN: ui_MainScreen
 void ui_MainScreen_screen_init(void);
 lv_obj_t * ui_MainScreen;
+lv_obj_t * ui_headerContainer;
+lv_obj_t * ui_timeLabel;
+lv_obj_t * ui_dateLabel;
+lv_obj_t * ui_mainContainer;
+lv_obj_t * ui_Panel1;
+lv_obj_t * ui_leftSideContainer;
 lv_obj_t * ui_counterLabel;
-void ui_event_counterData(lv_event_t * e);
-lv_obj_t * ui_counterData;
-lv_obj_t * ui_incBtn;
-lv_obj_t * ui_Label4;
-lv_obj_t * ui_decBtn;
-lv_obj_t * ui_Label3;
+lv_obj_t * ui_counterDataLabel2;
+lv_obj_t * ui_goalLabel;
+lv_obj_t * ui_goalDataLabel;
+lv_obj_t * ui_dailyGoalLabel;
+lv_obj_t * ui_dailyGoalDataLabel;
+lv_obj_t * ui_rightSideContainer;
+lv_obj_t * ui_nameLabel;
+lv_obj_t * ui_surnameLabel;
+lv_obj_t * ui_counterContainer;
+lv_obj_t * ui_outerPanel;
+lv_obj_t * ui_innerPanel;
+lv_obj_t * ui_counterDataLabel;
+lv_obj_t * ui_checkerBar;
+lv_obj_t * ui_footerContainer;
+lv_obj_t * ui_Image1;
+lv_obj_t * ui_exitButton;
+lv_obj_t * ui_settingsButton;
 // CUSTOM VARIABLES
 
 // EVENTS
 lv_obj_t * ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
+const lv_img_dsc_t * ui_imgset_1541413707[1] = {&ui_img_441374382};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -45,29 +64,16 @@ lv_obj_t * ui____initial_actions0;
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
-void ui_event_counterData(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-
-    if(event_code == LV_EVENT_KEY) {
-        _ui_label_set_property(ui_counterData, _UI_LABEL_PROPERTY_TEXT, "");
-    }
-}
 
 ///////////////////// SCREENS ////////////////////
-// 5 saniye sonra çalışacak fonksiyon
-void switch_to_main_screen(lv_timer_t * timer)
+
+// Timer fonksiyonu
+static void switch_to_main_screen(lv_timer_t * timer)
 {
-    // **Eğer main ekran NULL ise, önce oluştur**
-    if (ui_MainScreen == NULL) {
-        ui_MainScreen_screen_init();
-    }
-    
-    // **Ana ekrana geçiş yap**
-    lv_disp_load_scr(ui_MainScreen);
+    lv_disp_load_scr(ui_MainScreen); // Main Screen'e geçiş yap
 }
 
-// **UI Başlatma Fonksiyonu**
+// UI başlatma fonksiyonu
 void ui_init(void)
 {
     lv_disp_t * dispp = lv_disp_get_default();
@@ -75,15 +81,13 @@ void ui_init(void)
                                                false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
 
-    // **Önce ekranları oluştur**
+    // Ekranları oluştur
     ui_LoadingScreen_screen_init();
-    ui_MainScreen_screen_init();  // Bunu timer içinde de çağırabiliriz ama şimdilik oluşturduk
+    ui_MainScreen_screen_init();
 
-    ui____initial_actions0 = lv_obj_create(NULL);
-
-    // **Başlangıçta Loading Screen'i göster**
+    // İlk olarak Loading Screen'i göster
     lv_disp_load_scr(ui_LoadingScreen);
 
-    // **5 saniye (5000 ms) sonra `switch_to_main_screen()` fonksiyonunu çalıştır**
-    lv_timer_create(switch_to_main_screen, 5000, NULL);
+    // 3 saniye sonra Main Screen'e geçiş yapmak için Timer oluştur
+    lv_timer_t * timer = lv_timer_create(switch_to_main_screen, 3000, NULL);
 }

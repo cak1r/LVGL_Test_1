@@ -16,7 +16,6 @@ extern "C" {
 #include "ui_events.h"
 
 
-
 // SCREEN: ui_LoadingScreen
 void ui_LoadingScreen_screen_init(void);
 extern lv_obj_t * ui_LoadingScreen;
@@ -27,13 +26,30 @@ extern lv_obj_t * ui_loadingSpinner;
 // SCREEN: ui_MainScreen
 void ui_MainScreen_screen_init(void);
 extern lv_obj_t * ui_MainScreen;
+extern lv_obj_t * ui_headerContainer;
+extern lv_obj_t * ui_timeLabel;
+extern lv_obj_t * ui_dateLabel;
+extern lv_obj_t * ui_mainContainer;
+extern lv_obj_t * ui_Panel1;
+extern lv_obj_t * ui_leftSideContainer;
 extern lv_obj_t * ui_counterLabel;
-void ui_event_counterData(lv_event_t * e);
-extern lv_obj_t * ui_counterData;
-extern lv_obj_t * ui_incBtn;
-extern lv_obj_t * ui_Label4;
-extern lv_obj_t * ui_decBtn;
-extern lv_obj_t * ui_Label3;
+extern lv_obj_t * ui_counterDataLabel2;
+extern lv_obj_t * ui_goalLabel;
+extern lv_obj_t * ui_goalDataLabel;
+extern lv_obj_t * ui_dailyGoalLabel;
+extern lv_obj_t * ui_dailyGoalDataLabel;
+extern lv_obj_t * ui_rightSideContainer;
+extern lv_obj_t * ui_nameLabel;
+extern lv_obj_t * ui_surnameLabel;
+extern lv_obj_t * ui_counterContainer;
+extern lv_obj_t * ui_outerPanel;
+extern lv_obj_t * ui_innerPanel;
+extern lv_obj_t * ui_counterDataLabel;
+extern lv_obj_t * ui_checkerBar;
+extern lv_obj_t * ui_footerContainer;
+extern lv_obj_t * ui_Image1;
+extern lv_obj_t * ui_exitButton;
+extern lv_obj_t * ui_settingsButton;
 // CUSTOM VARIABLES
 
 // EVENTS
@@ -42,9 +58,10 @@ extern lv_obj_t * ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
 LV_IMG_DECLARE(ui_img_973080792);    // assets/Merkotech_logo-removebg-preview.png
+LV_IMG_DECLARE(ui_img_logout_png);    // assets/logout.png
+LV_IMG_DECLARE(ui_img_setting_png);    // assets/setting.png
+LV_IMG_DECLARE(ui_img_441374382);    // assets/logout-512.png
 
-//FONTS
-LV_FONT_DECLARE(lv_font_custom_montserrat_100);
 // UI INIT
 void ui_init(void);
 
