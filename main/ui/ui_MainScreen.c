@@ -16,6 +16,7 @@ void ui_MainScreen_screen_init(void)
     lv_obj_remove_style_all(ui_headerContainer);
     lv_obj_set_width(ui_headerContainer, 800);
     lv_obj_set_height(ui_headerContainer, 40);
+    
     lv_obj_set_x(ui_headerContainer, 0);
     lv_obj_set_y(ui_headerContainer, -220);
     lv_obj_set_align(ui_headerContainer, LV_ALIGN_CENTER);
@@ -38,7 +39,7 @@ void ui_MainScreen_screen_init(void)
     ui_dateLabel = lv_label_create(ui_headerContainer);
     lv_obj_set_width(ui_dateLabel, 120);
     lv_obj_set_height(ui_dateLabel, 40);
-    lv_obj_set_x(ui_dateLabel, 340);
+    lv_obj_set_x(ui_dateLabel, 330);
     lv_obj_set_y(ui_dateLabel, 0);
     lv_obj_set_align(ui_dateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_dateLabel, "5/3/2025");
