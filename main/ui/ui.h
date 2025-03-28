@@ -11,7 +11,7 @@ extern "C" {
 #endif
 
 #include "lvgl.h"
-
+#include "custom_fonts/custom_fonts.h"
 #include "ui_helpers.h"
 #include "ui_events.h"
 
@@ -21,6 +21,7 @@ void ui_LoadingScreen_screen_init(void);
 extern lv_obj_t * ui_LoadingScreen;
 extern lv_obj_t * ui_merkotechLogo;
 extern lv_obj_t * ui_loadingSpinner;
+
 // CUSTOM VARIABLES
 
 // SCREEN: ui_MainScreen
@@ -50,7 +51,27 @@ extern lv_obj_t * ui_footerContainer;
 extern lv_obj_t * ui_Image1;
 extern lv_obj_t * ui_exitButton;
 extern lv_obj_t * ui_settingsButton;
+extern lv_obj_t *ta_user;
+extern lv_obj_t *ta_pass;
 // CUSTOM VARIABLES
+
+// SCREEN: ui_loginScreen
+void ui_loginScreen_screen_init(void);
+extern lv_obj_t * ui_loginScreen;
+
+// CUSTOM VARIABLES
+
+void ui_screen_bant_select_init(void);
+void ui_screen_order_select_init(void);
+void ui_screen_operation_select_init(void);
+
+extern lv_obj_t * screen_bant;
+extern lv_obj_t * screen_order;
+extern lv_obj_t * screen_operation;
+
+extern int selected_bant_id;
+extern int selected_order_id;
+
 
 // EVENTS
 

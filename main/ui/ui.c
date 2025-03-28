@@ -7,7 +7,22 @@
 #include "ui_helpers.h"
 #include "lvgl.h"
 
+// CUSTOM SCREEN PROTOTYPE
+void ui_screen_bant_select_init(void);
+void ui_screen_order_select_init(void);
+void ui_screen_operation_select_init(void);
+
+
 ///////////////////// VARIABLES ////////////////////
+
+
+int selected_bant_id = -1;
+int selected_order_id = -1;
+
+// CUSTOM SCREENS
+lv_obj_t *screen_bant;
+lv_obj_t *screen_order;
+lv_obj_t *screen_operation;
 
 
 // SCREEN: ui_LoadingScreen
@@ -47,6 +62,13 @@ lv_obj_t * ui_exitButton;
 lv_obj_t * ui_settingsButton;
 // CUSTOM VARIABLES
 
+// SCREEN: ui_LoadingScreen
+void ui_loginScreen_screen_init(void);
+lv_obj_t * ui_loginScreen;
+
+// CUSTOM VARIABLES
+
+
 // EVENTS
 lv_obj_t * ui____initial_actions0;
 
@@ -82,12 +104,17 @@ void ui_init(void)
     lv_disp_set_theme(dispp, theme);
 
     // Ekranları oluştur
-    ui_LoadingScreen_screen_init();
-    ui_MainScreen_screen_init();
+   // Ekranları oluştur
+   ui_LoadingScreen_screen_init();
+   ui_MainScreen_screen_init();
+   ui_loginScreen_screen_init();
 
+   // 💡 Bizim eklediğimiz özel ekranlar:
+   ui_screen_bant_select_init();
+   ui_screen_order_select_init();
+   ui_screen_operation_select_init();
     // İlk olarak Loading Screen'i göster
-    lv_disp_load_scr(ui_LoadingScreen);
-
+    lv_disp_load_scr(ui_loginScreen);
     // 3 saniye sonra Main Screen'e geçiş yapmak için Timer oluştur
-    lv_timer_t * timer = lv_timer_create(switch_to_main_screen, 3000, NULL);
+    //lv_timer_t * timer = lv_timer_create(switch_to_main_screen, 3000, NULL);
 }

@@ -56,6 +56,7 @@ void init_pulse_counter() {
     counter_timer = lv_timer_create(update_pulse_label, 500, NULL);
 }
 
+
 void app_main()
 {
     wifi_init();  // 🌐 Wi-Fi başlat
@@ -76,6 +77,8 @@ void app_main()
         // Release the mutex
         //lv_label_set_text(ui_counterDataLabel2,"deneme2");
         ui_init();
+        
+        
         start_time_update_task();
         //lv_label_set_text(ui_counterDataLabel2,"deneme3");
          // 📌 **GPIO'dan pulse okumayı başlat**

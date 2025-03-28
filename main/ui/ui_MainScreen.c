@@ -4,6 +4,67 @@
 // Project name: SquareLine_Project
 
 #include "ui.h"
+#include <string.h>
+
+
+// Popup için overlay tanımı
+static lv_obj_t *popup_overlay;
+
+// Prototipler
+static void show_exit_confirmation_popup(void);
+static void confirm_logout_cb(lv_event_t *e);
+static void cancel_logout_cb(lv_event_t *e);
+
+//EVENT CB
+static void exit_btn_event_cb(lv_event_t * e) {
+    // Oturumu sıfırlayabilirsin, değişkenleri temizleyebilirsin vs.
+    show_exit_confirmation_popup(); 
+}
+
+static void confirm_logout_cb(lv_event_t *e) {
+    lv_obj_del(popup_overlay);  // popup ve overlay temizle
+
+
+    lv_textarea_set_text(ta_user, "");
+    lv_textarea_set_text(ta_pass, "");
+    lv_disp_load_scr(ui_loginScreen);  // login ekranına dön
+}
+
+static void cancel_logout_cb(lv_event_t *e) {
+    lv_obj_del(popup_overlay);  // popup'ı kapat
+}
+
+static void show_exit_confirmation_popup(void) {
+    popup_overlay = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(popup_overlay, 800, 480);
+    lv_obj_set_style_bg_color(popup_overlay, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(popup_overlay, LV_OPA_50, 0);
+    lv_obj_clear_flag(popup_overlay, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *popup = lv_obj_create(popup_overlay);
+    lv_obj_set_size(popup, 300, 180);
+    lv_obj_center(popup);
+    lv_obj_set_style_bg_color(popup, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_radius(popup, 12, 0);
+    lv_obj_set_style_shadow_width(popup, 20, 0);
+
+    lv_obj_t *label = lv_label_create(popup);
+    lv_label_set_text(label, "Çıkmak istediğine emin misin?");
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 20);
+
+    lv_obj_t *btn_yes = lv_btn_create(popup);
+    lv_obj_set_size(btn_yes, 100, 40);
+    lv_obj_align(btn_yes, LV_ALIGN_BOTTOM_LEFT, 10, -10);
+    lv_obj_add_event_cb(btn_yes, confirm_logout_cb, LV_EVENT_CLICKED, NULL);
+    lv_label_set_text(lv_label_create(btn_yes), "Evet");
+
+    lv_obj_t *btn_no = lv_btn_create(popup);
+    lv_obj_set_size(btn_no, 100, 40);
+    lv_obj_align(btn_no, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_add_event_cb(btn_no, cancel_logout_cb, LV_EVENT_CLICKED, NULL);
+    lv_label_set_text(lv_label_create(btn_no), "Hayır");
+}
+
 
 void ui_MainScreen_screen_init(void)
 {
@@ -242,7 +303,8 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_style_bg_color(ui_exitButton, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_exitButton, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_src(ui_exitButton, &ui_img_logout_png, LV_PART_MAIN | LV_STATE_DEFAULT);
-
+    lv_obj_add_event_cb(ui_exitButton, exit_btn_event_cb, LV_EVENT_CLICKED, NULL);
+   
     ui_settingsButton = lv_btn_create(ui_footerContainer);
     lv_obj_set_width(ui_settingsButton, 60);
     lv_obj_set_height(ui_settingsButton, 60);
