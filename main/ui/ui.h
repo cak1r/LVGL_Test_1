@@ -64,6 +64,7 @@ extern lv_obj_t * ui_loginScreen;
 void ui_screen_bant_select_init(void);
 void ui_screen_order_select_init(void);
 void ui_screen_operation_select_init(void);
+void ui_screen_settings_init(void);
 
 extern lv_obj_t * screen_bant;
 extern lv_obj_t * screen_order;
@@ -72,6 +73,7 @@ extern lv_obj_t * screen_operation;
 extern int selected_bant_id;
 extern int selected_order_id;
 
+extern lv_obj_t *screen_settings;
 
 // EVENTS
 

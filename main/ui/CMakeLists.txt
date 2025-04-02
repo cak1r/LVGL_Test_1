@@ -24,6 +24,7 @@ SET(SOURCES
     ui/bantSelectScreen.c
     ui/orderSelectScreen.c
     ui/operationSelectScreen.c
+    ui/settingsScreen.c
 )
 
 add_library(ui ${SOURCES})

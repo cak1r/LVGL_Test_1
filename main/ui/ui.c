@@ -108,6 +108,7 @@ void ui_init(void)
    ui_LoadingScreen_screen_init();
    ui_MainScreen_screen_init();
    ui_loginScreen_screen_init();
+   ui_screen_settings_init();
 
    // 💡 Bizim eklediğimiz özel ekranlar:
    ui_screen_bant_select_init();

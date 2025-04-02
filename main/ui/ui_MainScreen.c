@@ -6,6 +6,64 @@
 #include "ui.h"
 #include <string.h>
 
+static void show_pin_popup(void);
+static void kb_event_cb(lv_event_t *e);
+static void pin_entered_cb(lv_event_t *e);
+static lv_obj_t *pin_popup;
+static lv_obj_t *pin_ta;
+
+static void show_pin_popup(void) {
+    pin_popup = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(pin_popup, 300, 200);
+    lv_obj_center(pin_popup);
+
+    lv_obj_t *label = lv_label_create(pin_popup);
+    lv_label_set_text(label, "PIN Kodu:");
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 10);
+
+    pin_ta = lv_textarea_create(pin_popup);
+    lv_obj_set_size(pin_ta, 200, 50);
+    lv_textarea_set_password_mode(pin_ta, true);
+    lv_obj_align(pin_ta, LV_ALIGN_CENTER, 0, -20);
+
+    lv_obj_t *kb = lv_keyboard_create(lv_scr_act());
+    lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_NUMBER); // NUMERIK mod
+    lv_keyboard_set_textarea(kb, pin_ta); // ta_pin: PIN giriş textarea’sı
+    lv_obj_add_event_cb(kb, kb_event_cb, LV_EVENT_ALL, pin_ta);
+
+    lv_obj_t *ok_btn = lv_btn_create(pin_popup);
+    lv_obj_set_size(ok_btn, 100, 40);
+    lv_obj_align(ok_btn, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_add_event_cb(ok_btn, pin_entered_cb, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *ok_lbl = lv_label_create(ok_btn);
+    lv_label_set_text(ok_lbl, "Giriş");
+    lv_obj_center(ok_lbl);
+}
+
+static void pin_entered_cb(lv_event_t *e) {
+    const char *pin = lv_textarea_get_text(pin_ta);
+    if (strcmp(pin, "1234") == 0) {
+        lv_obj_del(pin_popup);
+        lv_disp_load_scr(screen_settings);
+    } else {
+        lv_label_set_text(lv_label_create(pin_popup), "Hatalı PIN!");
+    }
+}
+
+static void kb_event_cb(lv_event_t * e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * ta = lv_event_get_user_data(e);
+
+    if (code == LV_EVENT_READY || code == LV_EVENT_CANCEL) {
+        lv_obj_del(lv_event_get_target(e)); // Klavyeyi kaldır
+    }
+}
+
+static void settings_btn_event_cb(lv_event_t *e) {
+    show_pin_popup();
+}
+
 
 // Popup için overlay tanımı
 static lv_obj_t *popup_overlay;
@@ -316,6 +374,7 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_style_bg_color(ui_settingsButton, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_settingsButton, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_src(ui_settingsButton, &ui_img_setting_png, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_event_cb(ui_settingsButton, settings_btn_event_cb, LV_EVENT_CLICKED, NULL);
 
 
 }

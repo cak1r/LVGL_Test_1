@@ -25,7 +25,8 @@ idf_component_register(SRCS
     "ui/custom_fonts/lv_font_tr_60.c"
     "ui/custom_fonts/lv_font_tr_72.c"
     "ui/custom_fonts/lv_font_tr_96.c"
-    "ui/custom_fonts/lv_font_tr_120.c"   
+    "ui/custom_fonts/lv_font_tr_120.c" 
+    "ui/settingsScreen.c"
 )
 
 
