@@ -15,7 +15,7 @@ void obtain_time() {
     esp_sntp_init();
 
     // 📌 **GMT+3 Saat Dilimi Ayarı**
-    setenv("TZ", "EET-3EEST,M3.5.0/3,M10.5.0/4", 1); 
+    setenv("TZ", "UTC-3", 1);
     tzset(); // 📌 Değişiklikleri uygula
 
     // 📌 Güncellenene kadar bekleyelim

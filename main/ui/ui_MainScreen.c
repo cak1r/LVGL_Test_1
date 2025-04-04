@@ -12,10 +12,23 @@ static void pin_entered_cb(lv_event_t *e);
 static lv_obj_t *pin_popup;
 static lv_obj_t *pin_ta;
 
+static void cancel_btn_event_cb(lv_event_t *e) {
+    if (pin_popup) {
+        lv_obj_del(pin_popup);
+        pin_popup = NULL;
+    }
+}
+
+
 static void show_pin_popup(void) {
-    pin_popup = lv_obj_create(lv_scr_act());
+    lv_obj_t *top_layer = lv_layer_top();
+
+    pin_popup = lv_obj_create(top_layer);
     lv_obj_set_size(pin_popup, 300, 200);
     lv_obj_center(pin_popup);
+    lv_obj_set_style_bg_color(pin_popup, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_radius(pin_popup, 10, 0);
+    lv_obj_set_style_pad_all(pin_popup, 10, 0);
 
     lv_obj_t *label = lv_label_create(pin_popup);
     lv_label_set_text(label, "PIN Kodu:");
@@ -26,20 +39,31 @@ static void show_pin_popup(void) {
     lv_textarea_set_password_mode(pin_ta, true);
     lv_obj_align(pin_ta, LV_ALIGN_CENTER, 0, -20);
 
-    lv_obj_t *kb = lv_keyboard_create(lv_scr_act());
-    lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_NUMBER); // NUMERIK mod
-    lv_keyboard_set_textarea(kb, pin_ta); // ta_pin: PIN giriş textarea’sı
+    lv_obj_t *kb = lv_keyboard_create(top_layer);
+    lv_keyboard_set_mode(kb, LV_KEYBOARD_MODE_NUMBER);
+    lv_keyboard_set_textarea(kb, pin_ta);
     lv_obj_add_event_cb(kb, kb_event_cb, LV_EVENT_ALL, pin_ta);
 
+    // Giriş butonu
     lv_obj_t *ok_btn = lv_btn_create(pin_popup);
     lv_obj_set_size(ok_btn, 100, 40);
-    lv_obj_align(ok_btn, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_align(ok_btn, LV_ALIGN_BOTTOM_LEFT, 10, -10);
     lv_obj_add_event_cb(ok_btn, pin_entered_cb, LV_EVENT_CLICKED, NULL);
-
     lv_obj_t *ok_lbl = lv_label_create(ok_btn);
-    lv_label_set_text(ok_lbl, "Giriş");
+    lv_label_set_text(ok_lbl, "Giris");
     lv_obj_center(ok_lbl);
+
+    // İptal butonu
+    lv_obj_t *cancel_btn = lv_btn_create(pin_popup);
+    lv_obj_set_size(cancel_btn, 100, 40);
+    lv_obj_align(cancel_btn, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_add_event_cb(cancel_btn, cancel_btn_event_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *cancel_lbl = lv_label_create(cancel_btn);
+    lv_label_set_text(cancel_lbl, "Iptal");
+    lv_obj_center(cancel_lbl);
 }
+
+
 
 static void pin_entered_cb(lv_event_t *e) {
     const char *pin = lv_textarea_get_text(pin_ta);
@@ -47,7 +71,7 @@ static void pin_entered_cb(lv_event_t *e) {
         lv_obj_del(pin_popup);
         lv_disp_load_scr(screen_settings);
     } else {
-        lv_label_set_text(lv_label_create(pin_popup), "Hatalı PIN!");
+        lv_label_set_text(lv_label_create(pin_popup), "Hatali PIN!");
     }
 }
 
@@ -61,7 +85,7 @@ static void kb_event_cb(lv_event_t * e) {
 }
 
 static void settings_btn_event_cb(lv_event_t *e) {
-    show_pin_popup();
+    show_pin_popup(); 
 }
 
 
@@ -79,6 +103,13 @@ static void exit_btn_event_cb(lv_event_t * e) {
     show_exit_confirmation_popup(); 
 }
 
+void call_maintenance_cb(lv_event_t *e) {
+    // Buraya HTTP isteği gönderen kodu yazabilirsin
+    
+    // Geçici simülasyon: butonu disable et
+    lv_obj_add_state(lv_event_get_target(e), LV_STATE_DISABLED);
+}
+
 static void confirm_logout_cb(lv_event_t *e) {
     lv_obj_del(popup_overlay);  // popup ve overlay temizle
 
@@ -93,7 +124,9 @@ static void cancel_logout_cb(lv_event_t *e) {
 }
 
 static void show_exit_confirmation_popup(void) {
-    popup_overlay = lv_obj_create(lv_scr_act());
+    lv_obj_t *top_layer = lv_layer_top();
+
+    popup_overlay = lv_obj_create(top_layer);
     lv_obj_set_size(popup_overlay, 800, 480);
     lv_obj_set_style_bg_color(popup_overlay, lv_color_hex(0x000000), 0);
     lv_obj_set_style_bg_opa(popup_overlay, LV_OPA_50, 0);
@@ -107,7 +140,7 @@ static void show_exit_confirmation_popup(void) {
     lv_obj_set_style_shadow_width(popup, 20, 0);
 
     lv_obj_t *label = lv_label_create(popup);
-    lv_label_set_text(label, "Çıkmak istediğine emin misin?");
+    lv_label_set_text(label, "Cikmak istedigine emin misin?");
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 20);
 
     lv_obj_t *btn_yes = lv_btn_create(popup);
@@ -120,16 +153,19 @@ static void show_exit_confirmation_popup(void) {
     lv_obj_set_size(btn_no, 100, 40);
     lv_obj_align(btn_no, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
     lv_obj_add_event_cb(btn_no, cancel_logout_cb, LV_EVENT_CLICKED, NULL);
-    lv_label_set_text(lv_label_create(btn_no), "Hayır");
+    lv_label_set_text(lv_label_create(btn_no), "Hayir");
 }
+
 
 
 void ui_MainScreen_screen_init(void)
 {
-    ui_MainScreen = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_MainScreen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_shadow_color(ui_MainScreen, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_shadow_opa(ui_MainScreen, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    tileview = lv_tileview_create(NULL);
+    lv_obj_set_size(tileview, 800, 480);
+    lv_disp_load_scr(tileview);  // Ekrana tileview'i yükle
+
+    tile_main = lv_tileview_add_tile(tileview, 0, 0, LV_DIR_BOTTOM);  // Main screen olarak kullanılacak tile
+    ui_MainScreen = tile_main;
 
     ui_headerContainer = lv_obj_create(ui_MainScreen);
     lv_obj_remove_style_all(ui_headerContainer);
@@ -172,9 +208,9 @@ void ui_MainScreen_screen_init(void)
     ui_mainContainer = lv_obj_create(ui_MainScreen);
     lv_obj_remove_style_all(ui_mainContainer);
     lv_obj_set_width(ui_mainContainer, 800);
-    lv_obj_set_height(ui_mainContainer, 350);
+    lv_obj_set_height(ui_mainContainer, 440);
     lv_obj_set_x(ui_mainContainer, 0);
-    lv_obj_set_y(ui_mainContainer, -20);
+    lv_obj_set_y(ui_mainContainer, 20); 
     lv_obj_set_align(ui_mainContainer, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_mainContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
@@ -328,53 +364,72 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_style_bg_color(ui_checkerBar, lv_color_hex(0x0CE92F), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_checkerBar, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
-    ui_footerContainer = lv_obj_create(ui_MainScreen);
+    ui_exitButton = lv_btn_create(tile_main);
+    lv_obj_set_size(ui_exitButton, 60, 60);
+    lv_obj_align(ui_exitButton, LV_ALIGN_BOTTOM_RIGHT, -10, -10);
+    lv_obj_set_style_bg_img_src(ui_exitButton, &ui_img_logout_png, LV_PART_MAIN);
+    lv_obj_add_event_cb(ui_exitButton, exit_btn_event_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_style_bg_color(ui_exitButton, lv_color_hex(0xffffff), LV_PART_MAIN);
+    // Durus ekranı tile'ı - en başa taşındı
+    tile_durus = lv_tileview_add_tile(tileview, 0, 1, LV_DIR_TOP);
+
+    // Footer (Artık tile_durus altına eklenecek ve görünür olacak)
+    ui_footerContainer = lv_obj_create(tile_durus);
     lv_obj_remove_style_all(ui_footerContainer);
-    lv_obj_set_width(ui_footerContainer, 800);
-    lv_obj_set_height(ui_footerContainer, 80);
-    lv_obj_set_x(ui_footerContainer, 0);
-    lv_obj_set_y(ui_footerContainer, 200);
-    lv_obj_set_align(ui_footerContainer, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_footerContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_footerContainer, lv_color_hex(0x00A8FF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_footerContainer, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_size(ui_footerContainer, 800, 80);
+    lv_obj_align(ui_footerContainer, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_clear_flag(ui_footerContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(ui_footerContainer, lv_color_hex(0x00A8FF), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(ui_footerContainer, 255, LV_PART_MAIN);
 
     ui_Image1 = lv_img_create(ui_footerContainer);
     lv_img_set_src(ui_Image1, &ui_img_973080792);
-    lv_obj_set_width(ui_Image1, LV_SIZE_CONTENT);   /// 474
-    lv_obj_set_height(ui_Image1, LV_SIZE_CONTENT);    /// 527
-    lv_obj_set_x(ui_Image1, 0);
-    lv_obj_set_y(ui_Image1, 7);
-    lv_obj_set_align(ui_Image1, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_align(ui_Image1, LV_ALIGN_CENTER, 0, 7);
     lv_img_set_zoom(ui_Image1, 50);
 
-    ui_exitButton = lv_btn_create(ui_footerContainer);
-    lv_obj_set_width(ui_exitButton, 60);
-    lv_obj_set_height(ui_exitButton, 60);
-    lv_obj_set_x(ui_exitButton, 360);
-    lv_obj_set_y(ui_exitButton, 0);
-    lv_obj_set_align(ui_exitButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_exitButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_exitButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_exitButton, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_exitButton, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_img_src(ui_exitButton, &ui_img_logout_png, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_add_event_cb(ui_exitButton, exit_btn_event_cb, LV_EVENT_CLICKED, NULL);
-   
     ui_settingsButton = lv_btn_create(ui_footerContainer);
-    lv_obj_set_width(ui_settingsButton, 60);
-    lv_obj_set_height(ui_settingsButton, 60);
-    lv_obj_set_x(ui_settingsButton, -360);
-    lv_obj_set_y(ui_settingsButton, 0);
-    lv_obj_set_align(ui_settingsButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_settingsButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_settingsButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_settingsButton, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_settingsButton, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_img_src(ui_settingsButton, &ui_img_setting_png, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_size(ui_settingsButton, 60, 60);
+    lv_obj_align(ui_settingsButton, LV_ALIGN_LEFT_MID, 10, 0);
+    lv_obj_set_style_bg_img_src(ui_settingsButton, &ui_img_setting_png, LV_PART_MAIN);
     lv_obj_add_event_cb(ui_settingsButton, settings_btn_event_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_set_style_bg_color(ui_settingsButton, lv_color_hex(0xffffff), LV_PART_MAIN);
 
+    // 3x2 kare butonlar (120x120) grid yerleşimi
+    const char *labels[4] = {"DURUS 1","DURUS 2","DURUS 3","DURUS 4",};
+    lv_color_t colors[4] = {
+        lv_color_hex(0x457b9d),
+        lv_color_hex(0xe23838),
+        lv_color_hex(0xf78200),
+        lv_color_hex(0x66b447)
+    };
 
+    int btn_w = 320;
+    int btn_h = 145;
+    int spacing_x = 20;
+    int spacing_y = 20;
+    int start_x = 60;
+    int start_y = 60;
+
+    for (int i = 0; i < 4; i++) {
+        int col = i % 2;
+        int row = i / 2;
+
+        lv_obj_t *btn = lv_btn_create(tile_durus);
+        lv_obj_set_size(btn, btn_w, btn_h);
+        lv_obj_align(btn, LV_ALIGN_TOP_LEFT,
+            start_x + col * (btn_w + spacing_x),
+            start_y + row * (btn_h + spacing_y));
+
+        lv_obj_set_style_bg_color(btn, colors[i], LV_PART_MAIN);
+        lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_PART_MAIN);
+
+        if (i == 0) {
+            lv_obj_add_event_cb(btn, call_maintenance_cb, LV_EVENT_CLICKED, NULL);
+        }
+
+        lv_obj_t *lbl = lv_label_create(btn);
+        lv_label_set_text(lbl, labels[i]);
+        lv_obj_center(lbl);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    }
 }

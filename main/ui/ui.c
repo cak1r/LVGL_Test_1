@@ -32,7 +32,14 @@ lv_obj_t * ui_merkotechLogo;
 lv_obj_t * ui_loadingSpinner;
 // CUSTOM VARIABLES
 
+lv_obj_t *tileview_test;
+lv_obj_t *tile_main_test;
+lv_obj_t *tile_durus_test;
 
+
+lv_obj_t *tileview;
+lv_obj_t *tile_main;
+lv_obj_t *tile_durus;
 // SCREEN: ui_MainScreen
 void ui_MainScreen_screen_init(void);
 lv_obj_t * ui_MainScreen;
@@ -89,11 +96,7 @@ const lv_img_dsc_t * ui_imgset_1541413707[1] = {&ui_img_441374382};
 
 ///////////////////// SCREENS ////////////////////
 
-// Timer fonksiyonu
-static void switch_to_main_screen(lv_timer_t * timer)
-{
-    lv_disp_load_scr(ui_MainScreen); // Main Screen'e geçiş yap
-}
+
 
 // UI başlatma fonksiyonu
 void ui_init(void)
@@ -114,8 +117,11 @@ void ui_init(void)
    ui_screen_bant_select_init();
    ui_screen_order_select_init();
    ui_screen_operation_select_init();
+   ui_tileTestScreen_init();
+   lv_disp_load_scr(ui_loginScreen);
+
     // İlk olarak Loading Screen'i göster
-    lv_disp_load_scr(ui_loginScreen);
+    //lv_disp_load_scr(ui_loginScreen);
     // 3 saniye sonra Main Screen'e geçiş yapmak için Timer oluştur
     //lv_timer_t * timer = lv_timer_create(switch_to_main_screen, 3000, NULL);
 }

@@ -23,9 +23,18 @@ extern lv_obj_t * ui_merkotechLogo;
 extern lv_obj_t * ui_loadingSpinner;
 
 // CUSTOM VARIABLES
+extern lv_obj_t *tileview_test;
+extern lv_obj_t *tile_main_test;
+extern lv_obj_t *tile_durus_test;
+void ui_tileTestScreen_init(void);
+
 
 // SCREEN: ui_MainScreen
 void ui_MainScreen_screen_init(void);
+extern lv_obj_t *tileview;
+extern lv_obj_t *tile_main;
+extern lv_obj_t *tile_durus;
+
 extern lv_obj_t * ui_MainScreen;
 extern lv_obj_t * ui_headerContainer;
 extern lv_obj_t * ui_timeLabel;

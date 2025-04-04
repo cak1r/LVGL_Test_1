@@ -25,6 +25,8 @@ SET(SOURCES
     ui/orderSelectScreen.c
     ui/operationSelectScreen.c
     ui/settingsScreen.c
+    ui_tileTestScreen.c
+    bg_image.c
 )
 
 add_library(ui ${SOURCES})

@@ -14,7 +14,7 @@ static const Operation operation_list[] = {
 
 static void operation_btn_event_cb(lv_event_t *e) {
     // En son operasyon seçildi -> Ana ekrana geç
-    lv_disp_load_scr(ui_MainScreen);
+    lv_disp_load_scr(tileview);
 }
 
 static void back_to_order_cb(lv_event_t *e) {
@@ -26,7 +26,7 @@ void ui_screen_operation_select_init(void) {
     lv_obj_set_size(screen_operation, 800, 480);
 
     lv_obj_t *label = lv_label_create(screen_operation);
-    lv_label_set_text(label, "Operasyon Seçin");
+    lv_label_set_text(label, "Operasyon Secin");
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 20);
 
     int y = 70;

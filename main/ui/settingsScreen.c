@@ -4,7 +4,7 @@ lv_obj_t *screen_settings;
 static lv_obj_t *ta_machine_name;
 
 static void back_btn_event_cb(lv_event_t *e) {
-    lv_disp_load_scr(ui_MainScreen);
+    lv_disp_load_scr(tileview);
 }
 
 
@@ -26,13 +26,13 @@ void ui_screen_settings_init(void) {
 
     // Makine Adı TextArea
     lv_obj_t *label_name = lv_label_create(screen_settings);
-    lv_label_set_text(label_name, "Makine Adı:");
+    lv_label_set_text(label_name, "Makine Adi:");
     lv_obj_align(label_name, LV_ALIGN_TOP_MID, 0, 80);
 
     ta_machine_name = lv_textarea_create(screen_settings);
     lv_obj_set_size(ta_machine_name, 300, 50);
     lv_obj_align_to(ta_machine_name, label_name, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
-    lv_textarea_set_placeholder_text(ta_machine_name, "örn: Makine-1");
+    lv_textarea_set_placeholder_text(ta_machine_name, "orn: Makine-1");
     
 
 

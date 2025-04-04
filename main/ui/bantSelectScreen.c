@@ -22,7 +22,7 @@ void ui_screen_bant_select_init(void) {
     lv_obj_set_size(screen_bant, 800, 480);
 
     lv_obj_t *label = lv_label_create(screen_bant);
-    lv_label_set_text(label, "Bant Seçin");
+    lv_label_set_text(label, "Bant Secin");
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 20);
 
     for (int i = 0; i < sizeof(bant_list) / sizeof(Bant); i++) {

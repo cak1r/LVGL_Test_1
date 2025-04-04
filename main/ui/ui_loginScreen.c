@@ -12,6 +12,8 @@ static const char *user_list[MAX_USERS] = {
     "admin", "ahmet", "ayse", "ali", "arda", "berat", "berke", "burak", "yusufreis", "yusufbaba"
 };
 
+LV_IMG_DECLARE(bg_image); 
+
 // === GLOBAL OBJE TANIMLARI ===
 static lv_obj_t *keyboard;
 static lv_obj_t *scrollable_cont;
@@ -97,6 +99,13 @@ void ui_loginScreen_screen_init(void)
     ui_loginScreen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_loginScreen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(ui_loginScreen, 800, 480);
+
+    lv_obj_t *bg = lv_img_create(ui_loginScreen);
+    lv_img_set_src(bg, &bg_image);
+    lv_obj_set_size(bg, 800, 480);
+    lv_obj_align(bg, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_move_background(bg);  // Tüm objelerin arkasına al
+
 
     scrollable_cont = lv_obj_create(ui_loginScreen);
     lv_obj_set_size(scrollable_cont, 800, 600);

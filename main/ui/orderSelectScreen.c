@@ -27,7 +27,7 @@ void ui_screen_order_select_init(void) {
     lv_obj_set_size(screen_order, 800, 480);
 
     lv_obj_t *label = lv_label_create(screen_order);
-    lv_label_set_text(label, "Order Seçin");
+    lv_label_set_text(label, "Order Secin");
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 20);
 
     int y = 70;
