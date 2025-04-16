@@ -6,8 +6,9 @@
 #include "driver/gpio.h"
 #include "waveshare_rgb_lcd_port.h"
 #include "ui/ui.h"
-#include "wifi_manager.h"
-#include "time_manager.h"
+#include "system_wifi.h"
+#include "system_time.h"
+#include "nvs_flash.h"
 
 #define PULSE_GPIO 6  // GPIO6'dan pulse okuyacağız
 #define DEBOUNCE_TIME_MS 1500  // 1500ms içinde yalnızca bir sayım yapılabilir
@@ -32,7 +33,7 @@ void update_pulse_label(lv_timer_t * timer) {
     sprintf(buffer, "%d", pulse_count);  // Sayıyı string'e çevir
     lv_label_set_text(ui_counterDataLabel, buffer);  // Label'ı güncelle
     
-    ESP_LOGI("PULSE", "Pulse Count: %d", pulse_count);
+    //ESP_LOGI("PULSE", "Pulse Count: %d", pulse_count);
 }
 
 // 📌 **GPIO Kurulumu**
@@ -58,7 +59,14 @@ void init_pulse_counter() {
 
 
 void app_main()
-{
+{   
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    
+    ESP_ERROR_CHECK(ret);
     wifi_init();  // 🌐 Wi-Fi başlat
     obtain_time(); // ⏰ NTP sunucusundan saat al
 

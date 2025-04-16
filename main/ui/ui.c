@@ -15,9 +15,14 @@ void ui_screen_operation_select_init(void);
 
 ///////////////////// VARIABLES ////////////////////
 
-
+Bant bant_list[MAX_BANT_COUNT];
+int bant_count = 0;
 int selected_bant_id = -1;
+
 int selected_order_id = -1;
+
+Order order_list[MAX_ORDER_COUNT];
+int order_count = 0;
 
 // CUSTOM SCREENS
 lv_obj_t *screen_bant;
@@ -26,7 +31,7 @@ lv_obj_t *screen_operation;
 
 
 // SCREEN: ui_LoadingScreen
-void ui_LoadingScreen_screen_init(void);
+void ui_screen_loading_init(void);
 lv_obj_t * ui_LoadingScreen;
 lv_obj_t * ui_merkotechLogo;
 lv_obj_t * ui_loadingSpinner;
@@ -41,7 +46,7 @@ lv_obj_t *tileview;
 lv_obj_t *tile_main;
 lv_obj_t *tile_durus;
 // SCREEN: ui_MainScreen
-void ui_MainScreen_screen_init(void);
+void ui_screen_main_init(void);
 lv_obj_t * ui_MainScreen;
 lv_obj_t * ui_headerContainer;
 lv_obj_t * ui_timeLabel;
@@ -70,7 +75,7 @@ lv_obj_t * ui_settingsButton;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_LoadingScreen
-void ui_loginScreen_screen_init(void);
+void ui_screen_login_init(void);
 lv_obj_t * ui_loginScreen;
 
 // CUSTOM VARIABLES
@@ -108,9 +113,9 @@ void ui_init(void)
 
     // Ekranları oluştur
    // Ekranları oluştur
-   ui_LoadingScreen_screen_init();
-   ui_MainScreen_screen_init();
-   ui_loginScreen_screen_init();
+   ui_screen_loading_init();
+   ui_screen_main_init();
+   ui_screen_login_init();
    ui_screen_settings_init();
 
    // 💡 Bizim eklediğimiz özel ekranlar:

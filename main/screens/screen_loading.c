@@ -5,7 +5,7 @@
 
 #include "ui.h"
 
-void ui_LoadingScreen_screen_init(void)
+void ui_screen_loading_init(void)
 {
     ui_LoadingScreen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_LoadingScreen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags

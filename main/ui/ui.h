@@ -11,13 +11,34 @@ extern "C" {
 #endif
 
 #include "lvgl.h"
-#include "custom_fonts/custom_fonts.h"
+
 #include "ui_helpers.h"
 #include "ui_events.h"
 
+#define MAX_BANT_COUNT 50
+#define MAX_ORDER_COUNT 50
+#define MAX_ORDER_CODE_LENGTH 64
+
+typedef struct {
+    int bant_id;
+    char bant_tanim[64];
+} Bant;
+
+typedef struct {
+    int id;
+    char code[MAX_ORDER_CODE_LENGTH];
+    int bant_id;
+} Order;
+
+extern Order order_list[MAX_ORDER_COUNT];
+extern int order_count;
+
+extern Bant bant_list[MAX_BANT_COUNT];
+extern int bant_count;
+extern int selected_bant_id;
 
 // SCREEN: ui_LoadingScreen
-void ui_LoadingScreen_screen_init(void);
+void ui_screen_loading_init(void);
 extern lv_obj_t * ui_LoadingScreen;
 extern lv_obj_t * ui_merkotechLogo;
 extern lv_obj_t * ui_loadingSpinner;
@@ -30,7 +51,7 @@ void ui_tileTestScreen_init(void);
 
 
 // SCREEN: ui_MainScreen
-void ui_MainScreen_screen_init(void);
+void ui_screen_main_init(void);
 extern lv_obj_t *tileview;
 extern lv_obj_t *tile_main;
 extern lv_obj_t *tile_durus;
@@ -65,7 +86,7 @@ extern lv_obj_t *ta_pass;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_loginScreen
-void ui_loginScreen_screen_init(void);
+void ui_screen_login_init(void);
 extern lv_obj_t * ui_loginScreen;
 
 // CUSTOM VARIABLES

@@ -1,4 +1,4 @@
-#include "wifi_manager.h"
+#include "system_wifi.h"
 
 #define WIFI_SSID "Merkotech"  // 📌 Wi-Fi SSID
 #define WIFI_PASS "Merkotech22." // 📌 Wi-Fi Şifresi

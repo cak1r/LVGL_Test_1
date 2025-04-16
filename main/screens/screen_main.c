@@ -158,7 +158,7 @@ static void show_exit_confirmation_popup(void) {
 
 
 
-void ui_MainScreen_screen_init(void)
+void ui_screen_main_init(void)
 {
     tileview = lv_tileview_create(NULL);
     lv_obj_set_size(tileview, 800, 480);

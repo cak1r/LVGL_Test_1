@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ayarlar>
+  <baglanti 
+    veritabani= "dinamik_kup" 
+    veri_kaynagi="DESKTOP-ACMBM8M\SQLEXPRESS" 
+    kullanici="sa" 
+    sifre="Merkotech22."
+  />
+  <dosya serveryeri="" client_yeri="D:\DATA\Dinamik Projects\Dosyalar"></dosya>
+</ayarlar>

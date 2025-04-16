@@ -1,4 +1,4 @@
-#include "time_manager.h"
+#include "system_time.h"
 #include "ui/ui.c"
 #include <time.h>
 
@@ -34,7 +34,7 @@ void obtain_time() {
     if (timeinfo.tm_year < (2020 - 1900)) {
         ESP_LOGE("NTP", "Zaman alınamadı!");
     } else {
-        ESP_LOGI("NTP", "Güncellenen Saat: %d:%d:%d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+        //ESP_LOGI("NTP", "Güncellenen Saat: %d:%d:%d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     }
 }
 
@@ -55,7 +55,7 @@ void update_time_and_date(lv_timer_t * timer) {
     lv_label_set_text(ui_timeLabel, time_str);
     lv_label_set_text(ui_dateLabel, date_str);
     
-    ESP_LOGI("TIME", "Updated Time: %s | Date: %s", time_str, date_str);
+    //ESP_LOGI("TIME", "Updated Time: %s | Date: %s", time_str, date_str);
 }
 
 void start_time_update_task() {

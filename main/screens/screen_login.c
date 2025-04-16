@@ -1,16 +1,15 @@
 #include "ui.h"
 #include <string.h>
-#include "custom_fonts/custom_fonts.h"
+#include "system_http.h"  // Kullanıcı listesi ve doğrulama fonksiyonu için
+#include "esp_log.h"
+
 lv_obj_t *ta_user = NULL;
 lv_obj_t *ta_pass = NULL;
 
 extern const lv_font_t lv_font_montserrat_20;
 extern lv_obj_t * screen_bant;
 
-#define MAX_USERS 10
-static const char *user_list[MAX_USERS] = {
-    "admin", "ahmet", "ayse", "ali", "arda", "berat", "berke", "burak", "yusufreis", "yusufbaba"
-};
+
 
 LV_IMG_DECLARE(bg_image); 
 
@@ -67,9 +66,9 @@ static void user_input_event_cb(lv_event_t *e) {
     lv_obj_clear_flag(listbox, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clean(listbox);
 
-    for (int i = 0; i < MAX_USERS; i++) {
-        if (strncasecmp(user_list[i], input, strlen(input)) == 0) {
-            lv_obj_t *btn = lv_list_add_btn(listbox, NULL, user_list[i]);
+    for (int i = 0; i < user_count; i++) {
+        if (strncasecmp(user_list[i].username, input, strlen(input)) == 0) {
+            lv_obj_t *btn = lv_list_add_btn(listbox, NULL, user_list[i].username);
             lv_obj_add_event_cb(btn, list_item_event_cb, LV_EVENT_CLICKED, NULL);
         }
     }
@@ -79,23 +78,32 @@ static void user_input_event_cb(lv_event_t *e) {
 }
 
 // === GİRİŞ BUTONU ===
+extern void fetch_user_list(void);
+extern bool validate_user_credentials(const char *, const char *);
+
 static void login_btn_event_cb(lv_event_t * e) {
     const char * user = lv_textarea_get_text(ta_user);
     const char * pass = lv_textarea_get_text(ta_pass);
 
-    if (strcmp(user, "admin") == 0 && strcmp(pass, "1234") == 0) {
-        lv_disp_load_scr(screen_bant); 
+    if (validate_user_credentials(user, pass)) {
+        ESP_LOGI("LOGIN", "Giriş başarılı: %s", user);
+        fetch_bantlar();                 // API'den bantları çek
+        ui_screen_bant_select_init();   // Dinamik ekran oluştur
+        lv_disp_load_scr(screen_bant);  // Ekranı göster
     } else {
         lv_obj_t *msg = lv_label_create(scrollable_cont);
-        lv_label_set_text(msg, "Hatalı giriş!");
+        lv_label_set_text(msg, "Hatalı kullanıcı adı veya şifre!");
         lv_obj_align(msg, LV_ALIGN_BOTTOM_MID, 0, -10);
-        lv_textarea_set_text(ta_pass, ""); // şifreyi sil
+        lv_textarea_set_text(ta_pass, ""); // Şifreyi sil
     }
 }
 
+
+
 // === EKRANI OLUŞTUR ===
-void ui_loginScreen_screen_init(void)
+void ui_screen_login_init(void)
 {
+    fetch_user_list();
     ui_loginScreen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_loginScreen, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(ui_loginScreen, 800, 480);
