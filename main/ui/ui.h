@@ -11,13 +11,27 @@ extern "C" {
 #endif
 
 #include "lvgl.h"
+#include <time.h>
 
 #include "ui_helpers.h"
 #include "ui_events.h"
+#include "esp_log.h"
 
 #define MAX_BANT_COUNT 50
 #define MAX_ORDER_COUNT 50
 #define MAX_ORDER_CODE_LENGTH 64
+#define MAX_OPERATION_COUNT 50
+#define MAX_OPERATION_NAME_LENGTH 64
+
+typedef struct {
+    int id;
+    const char *name;
+    int order_id;
+    int unit_time;  // Eklediğimiz yeni üye
+    int cut_count;  // Eklediğimiz yeni üye
+    int unit_time_tol;  // Add the new field
+
+} Operation;
 
 typedef struct {
     int bant_id;
@@ -36,7 +50,16 @@ extern int order_count;
 extern Bant bant_list[MAX_BANT_COUNT];
 extern int bant_count;
 extern int selected_bant_id;
+//update daily goal variable
+extern int expected;
 
+extern Operation operation_list[MAX_OPERATION_COUNT];
+extern int operation_count;
+
+extern int selected_cut_count;
+extern int selected_unit_time;
+extern int selected_unit_time_tol;
+extern void update_count_label(lv_obj_t *label, int hour, int minute, int second);
 // SCREEN: ui_LoadingScreen
 void ui_screen_loading_init(void);
 extern lv_obj_t * ui_LoadingScreen;
@@ -49,6 +72,7 @@ extern lv_obj_t *tile_main_test;
 extern lv_obj_t *tile_durus_test;
 void ui_tileTestScreen_init(void);
 
+extern time_t login_timestamp;
 
 // SCREEN: ui_MainScreen
 void ui_screen_main_init(void);

@@ -4,13 +4,61 @@
 // Project name: SquareLine_Project
 
 #include "ui.h"
-#include <string.h>
+
+#include "ui_helpers.h"
+#include "esp_log.h"
 
 static void show_pin_popup(void);
 static void kb_event_cb(lv_event_t *e);
 static void pin_entered_cb(lv_event_t *e);
 static lv_obj_t *pin_popup;
 static lv_obj_t *pin_ta;
+
+// ————— Globals —————
+static bool timer_started = false;  // timer’ın bir kez başlatıldığını takip edecek
+
+// ————— Prototipler —————
+static void refresh_main_screen(void);
+static void screen_main_loaded_cb(lv_event_t *e);
+static void update_work_timer_cb(lv_timer_t *timer);
+
+// ————— Timer Callback —————
+static void update_work_timer_cb(lv_timer_t *timer) {
+    (void)timer;
+    update_expected_work_label(ui_counterDataLabel2, login_timestamp);
+    refresh_main_screen();
+}
+
+// ————— Screen Loaded Callback —————
+static void screen_main_loaded_cb(lv_event_t *e) {
+    (void)e;
+    ESP_LOGI("debug", "screen_main_loaded_cb tetiklendi");
+    
+    
+        login_timestamp = time(NULL);  // Timer’ı başlat
+        lv_timer_create(update_work_timer_cb, 1000, NULL);  // Timer'ı başlat
+        timer_started = true;
+        ESP_LOGI("debug", "Timer başlatıldı");
+    
+    refresh_main_screen();  // Ekranı her yüklenince güncelle
+}
+
+// ————— Refresh Fonksiyonu —————
+static void refresh_main_screen(void) {
+    update_expected_work_label(ui_counterDataLabel2, login_timestamp);
+    update_count_label(ui_goalDataLabel, 18, 0, 0);  // Örnek olarak 18:00
+    lv_bar_set_value(ui_checkerBar, selected_cut_count, LV_ANIM_OFF);
+
+    time_t now = time(NULL);
+    struct tm *tm = localtime(&now);
+    char time_buf[16], date_buf[16];
+    strftime(time_buf, sizeof(time_buf), "%H:%M", tm);
+    strftime(date_buf, sizeof(date_buf), "%-m/%-d/%Y", tm);
+    lv_label_set_text(ui_timeLabel, time_buf);
+    lv_label_set_text(ui_dateLabel, date_buf);
+    ESP_LOGI("Debug","Timer çalıştı, debug deneme");
+}
+
 
 static void cancel_btn_event_cb(lv_event_t *e) {
     if (pin_popup) {
@@ -125,7 +173,18 @@ static void cancel_logout_cb(lv_event_t *e) {
 
 static void show_exit_confirmation_popup(void) {
     lv_obj_t *top_layer = lv_layer_top();
-
+    struct tm tm_info;
+    localtime_r(&login_timestamp, &tm_info);
+ESP_LOGW("DEBUG",
+    "login_timestamp (main screen): %04d-%02d-%02d %02d:%02d:%02d",
+    tm_info.tm_year + 1900,
+    tm_info.tm_mon  + 1,
+    tm_info.tm_mday,
+    tm_info.tm_hour,
+    tm_info.tm_min,
+    tm_info.tm_sec
+);
+    update_expected_work_label(ui_dailyGoalDataLabel, login_timestamp);
     popup_overlay = lv_obj_create(top_layer);
     lv_obj_set_size(popup_overlay, 800, 480);
     lv_obj_set_style_bg_color(popup_overlay, lv_color_hex(0x000000), 0);
@@ -159,15 +218,26 @@ static void show_exit_confirmation_popup(void) {
 
 
 void ui_screen_main_init(void)
-{
+{      
+    struct tm tm_info;
+        localtime_r(&login_timestamp, &tm_info);
+    ESP_LOGW("DEBUG",
+        "login_timestamp (main screen): %04d-%02d-%02d %02d:%02d:%02d",
+        tm_info.tm_year + 1900,
+        tm_info.tm_mon  + 1,
+        tm_info.tm_mday,
+        tm_info.tm_hour,
+        tm_info.tm_min,
+        tm_info.tm_sec
+    );
     tileview = lv_tileview_create(NULL);
     lv_obj_set_size(tileview, 800, 480);
-    lv_disp_load_scr(tileview);  // Ekrana tileview'i yükle
-
+    ESP_LOGI("Debug","main screen init");
     tile_main = lv_tileview_add_tile(tileview, 0, 0, LV_DIR_BOTTOM);  // Main screen olarak kullanılacak tile
-    ui_MainScreen = tile_main;
+    lv_obj_add_event_cb(tile_main, screen_main_loaded_cb, LV_EVENT_SCREEN_LOADED, NULL);
+    
 
-    ui_headerContainer = lv_obj_create(ui_MainScreen);
+    ui_headerContainer = lv_obj_create(tile_main);
     lv_obj_remove_style_all(ui_headerContainer);
     lv_obj_set_width(ui_headerContainer, 800);
     lv_obj_set_height(ui_headerContainer, 40);
@@ -205,7 +275,7 @@ void ui_screen_main_init(void)
     lv_obj_set_style_pad_top(ui_dateLabel, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(ui_dateLabel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_mainContainer = lv_obj_create(ui_MainScreen);
+    ui_mainContainer = lv_obj_create(tile_main);
     lv_obj_remove_style_all(ui_mainContainer);
     lv_obj_set_width(ui_mainContainer, 800);
     lv_obj_set_height(ui_mainContainer, 440);
@@ -253,43 +323,43 @@ void ui_screen_main_init(void)
     lv_obj_set_x(ui_counterDataLabel2, -20);
     lv_obj_set_y(ui_counterDataLabel2, -45);
     lv_obj_set_align(ui_counterDataLabel2, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_counterDataLabel2, "100");
+    lv_label_set_text(ui_counterDataLabel2, "0");
     lv_obj_set_style_text_font(ui_counterDataLabel2, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_goalLabel = lv_label_create(ui_leftSideContainer);
-    lv_obj_set_width(ui_goalLabel, 160);
+    lv_obj_set_width(ui_goalLabel, 220);
     lv_obj_set_height(ui_goalLabel, 35);
-    lv_obj_set_x(ui_goalLabel, -30);
+    lv_obj_set_x(ui_goalLabel, 0);
     lv_obj_set_y(ui_goalLabel, 80);
     lv_obj_set_align(ui_goalLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_goalLabel, "Goal");
+    lv_label_set_text(ui_goalLabel, "Gunluk Hedef");
     lv_obj_set_style_text_font(ui_goalLabel, &lv_font_montserrat_30, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_goalDataLabel = lv_label_create(ui_leftSideContainer);
     lv_obj_set_width(ui_goalDataLabel, 120);
     lv_obj_set_height(ui_goalDataLabel, 30);
     lv_obj_set_x(ui_goalDataLabel, -20);
-    lv_obj_set_y(ui_goalDataLabel, 35);
+    lv_obj_set_y(ui_goalDataLabel, 115);
     lv_obj_set_align(ui_goalDataLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_goalDataLabel, "2000");
+    lv_label_set_text(ui_goalDataLabel, "0");
     lv_obj_set_style_text_font(ui_goalDataLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_dailyGoalLabel = lv_label_create(ui_leftSideContainer);
-    lv_obj_set_width(ui_dailyGoalLabel, 160);
+    lv_obj_set_width(ui_dailyGoalLabel, 220);
     lv_obj_set_height(ui_dailyGoalLabel, 35);
-    lv_obj_set_x(ui_dailyGoalLabel, -30);
+    lv_obj_set_x(ui_dailyGoalLabel, 0);
     lv_obj_set_y(ui_dailyGoalLabel, 0);
     lv_obj_set_align(ui_dailyGoalLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_dailyGoalLabel, "Daily Goal");
+    lv_label_set_text(ui_dailyGoalLabel, "Anlik Hedef");
     lv_obj_set_style_text_font(ui_dailyGoalLabel, &lv_font_montserrat_30, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_dailyGoalDataLabel = lv_label_create(ui_leftSideContainer);
     lv_obj_set_width(ui_dailyGoalDataLabel, 120);
     lv_obj_set_height(ui_dailyGoalDataLabel, 30);
     lv_obj_set_x(ui_dailyGoalDataLabel, -20);
-    lv_obj_set_y(ui_dailyGoalDataLabel, 115);
+    lv_obj_set_y(ui_dailyGoalDataLabel, 35);
     lv_obj_set_align(ui_dailyGoalDataLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_dailyGoalDataLabel, "2000");
+    lv_label_set_text(ui_dailyGoalDataLabel, "0");
     lv_obj_set_style_text_font(ui_dailyGoalDataLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_rightSideContainer = lv_obj_create(ui_mainContainer);
@@ -352,15 +422,15 @@ void ui_screen_main_init(void)
     lv_obj_set_style_text_font(ui_counterDataLabel, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_checkerBar = lv_bar_create(ui_mainContainer);
-    lv_bar_set_range(ui_checkerBar, 0, 5);
+    
     lv_bar_set_value(ui_checkerBar, 4, LV_ANIM_OFF);
     lv_bar_set_start_value(ui_checkerBar, 0, LV_ANIM_OFF);
-    lv_obj_set_width(ui_checkerBar, 200);
-    lv_obj_set_height(ui_checkerBar, 30);
-    lv_obj_set_x(ui_checkerBar, 30);
-    lv_obj_set_y(ui_checkerBar, 150);
+    lv_obj_set_width(ui_checkerBar, 30);
+    lv_obj_set_height(ui_checkerBar, 200);
+    lv_obj_set_x(ui_checkerBar, 200);
+    lv_obj_set_y(ui_checkerBar, -30);
     lv_obj_set_align(ui_checkerBar, LV_ALIGN_CENTER);
-
+    
     lv_obj_set_style_bg_color(ui_checkerBar, lv_color_hex(0x0CE92F), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_checkerBar, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
@@ -386,7 +456,7 @@ void ui_screen_main_init(void)
     lv_img_set_src(ui_Image1, &ui_img_973080792);
     lv_obj_align(ui_Image1, LV_ALIGN_CENTER, 0, 7);
     lv_img_set_zoom(ui_Image1, 50);
-
+    
     ui_settingsButton = lv_btn_create(ui_footerContainer);
     lv_obj_set_size(ui_settingsButton, 60, 60);
     lv_obj_align(ui_settingsButton, LV_ALIGN_LEFT_MID, 10, 0);
@@ -432,4 +502,5 @@ void ui_screen_main_init(void)
         lv_obj_center(lbl);
         lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
+    lv_disp_load_scr(tileview);  // Ekrana tileview'i yükle
 }

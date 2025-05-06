@@ -13,6 +13,122 @@ User user_list[MAX_USER_COUNT];
 int user_count = 0;
 char current_logged_user[MAX_USERNAME_LENGTH] = "";
 
+
+Operation operation_list[MAX_OPERATION_COUNT];
+int operation_count = 0;
+
+void fetch_operations_by_order(int order_id) {
+    operation_count = 0;
+    char url[256];
+    snprintf(url, sizeof(url), "%s?order_id=%d", OPERATION_API_BASE, order_id);
+
+    esp_http_client_config_t config = {
+        .url = url,
+        .method = HTTP_METHOD_GET,
+        .timeout_ms = 5000,
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    if (esp_http_client_open(client, 0) != ESP_OK) {
+        ESP_LOGE(TAG, "❌ HTTP bağlantısı kurulamadı.");
+        esp_http_client_cleanup(client);
+        return;
+    }
+
+    int content_length = esp_http_client_fetch_headers(client);
+    if (content_length <= 0) content_length = 4096;
+
+    char *buffer = malloc(content_length + 1);
+    if (!buffer) {
+        ESP_LOGE(TAG, "❌ Bellek yetersiz!");
+        esp_http_client_cleanup(client);
+        return;
+    }
+
+    int read_len = esp_http_client_read_response(client, buffer, content_length);
+    if (read_len <= 0) {
+        ESP_LOGE(TAG, "❌ HTTP yanıtı okunamadı.");
+        free(buffer);
+        esp_http_client_cleanup(client);
+        return;
+    }
+    buffer[read_len] = '\0';
+
+    ESP_LOGD(TAG, "📦 HTTP yanıtı: %s", buffer);
+
+    cJSON *root = cJSON_Parse(buffer);
+    if (!root) {
+        ESP_LOGE(TAG, "❌ JSON ayrıştırma hatası");
+        free(buffer);
+        esp_http_client_cleanup(client);
+        return;
+    }
+
+    cJSON *arr = cJSON_IsArray(root) ? root : cJSON_GetObjectItem(root, "operations");
+    if (!cJSON_IsArray(arr)) {
+        ESP_LOGW(TAG, "❌ JSON beklenen dizi formatında değil");
+        cJSON_Delete(root);
+        free(buffer);
+        esp_http_client_cleanup(client);
+        return;
+    }
+
+    int index = 0;
+    cJSON *item;
+    cJSON_ArrayForEach(item, arr) {
+        if (index >= MAX_OPERATION_COUNT) break;
+
+        cJSON *id        = cJSON_GetObjectItem(item, "id");
+        cJSON *name      = cJSON_GetObjectItem(item, "name");
+        cJSON *unit_time = cJSON_GetObjectItem(item, "unit_time");
+        cJSON *cut_count = cJSON_GetObjectItem(item, "cut_count");
+        cJSON *unit_time_tol = cJSON_GetObjectItem(item, "unit_time_tol"); // Fetch the new field
+
+        // Zorunlu alan kontrolü: name, unit_time, cut_count
+        if (!name || !cJSON_IsString(name) ||
+            !unit_time || !cJSON_IsNumber(unit_time) ||
+            !cut_count || !cJSON_IsNumber(cut_count)) {
+            ESP_LOGW(TAG, "⏭️ Geçersiz JSON öğesi, atlanıyor");
+            continue;
+        }
+
+        // id opsiyonel: varsa ata, yoksa index veya varsayılan değer
+        if (id && cJSON_IsNumber(id)) {
+            operation_list[index].id = id->valueint;
+        } else {
+            operation_list[index].id = index;
+        }
+        operation_list[index].order_id = order_id;
+
+        // Bellek ayırma ve kopyalama
+        operation_list[index].name = malloc(strlen(name->valuestring) + 1);
+        if (operation_list[index].name) {
+            strcpy(operation_list[index].name, name->valuestring);
+        } else {
+            ESP_LOGW(TAG, "❌ Ad için bellek ayırma başarısız");
+        }
+
+        operation_list[index].unit_time = unit_time->valueint;
+        operation_list[index].cut_count = cut_count->valueint;
+
+        // Yeni eklenen unit_time_tol alanını kontrol et ve ata
+        if (unit_time_tol && cJSON_IsNumber(unit_time_tol)) {
+            operation_list[index].unit_time_tol = unit_time_tol->valueint;
+        } else {
+            operation_list[index].unit_time_tol = 0; // Varsayılan değer
+        }
+
+        index++;
+    }
+    operation_count = index;
+
+    cJSON_Delete(root);
+    free(buffer);
+    esp_http_client_cleanup(client);
+}
+
+
+
 void fetch_orders_for_bant(int bant_id) {
     order_count = 0;
     char url[128];

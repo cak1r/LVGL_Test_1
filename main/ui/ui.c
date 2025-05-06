@@ -14,6 +14,11 @@ void ui_screen_operation_select_init(void);
 
 
 ///////////////////// VARIABLES ////////////////////
+time_t login_timestamp = 0;
+int selected_cut_count;
+int selected_unit_time;
+int selected_unit_time_tol;
+int expected = 0;
 
 Bant bant_list[MAX_BANT_COUNT];
 int bant_count = 0;

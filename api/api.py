@@ -44,7 +44,7 @@ class SensorData(db.Model):
 
 class Order(db.Model):
     __tablename__ = 'tblMusteriSiparisleri'  # ← bu tablo adını senin veritabanına göre ayarla
-    id = db.Column("OrderNo", db.Integer, primary_key=True)
+    id = db.Column("MusteriSiparisID", db.Integer, primary_key=True)
     code = db.Column("MusteriOrderNo", db.String)
     bant_id = db.Column("bant_id", db.Integer)
 
@@ -68,11 +68,44 @@ def get_users():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route("/operations", methods=["GET"])
+def get_operations_by_order():
+    order_id = request.args.get("order_id", type=int)
+    if order_id is None:
+        return jsonify({"error": "order_id parametresi gerekli"}), 400
+
+    try:
+        result = db.session.execute(text("""
+            SELECT verimlilik_operasyon_adi, verimlilik_operasyon_birim_sure, verimlilik_operasyon_kesim_sayisi, verimlilik_operasyon_birim_sure_tolerans
+            FROM v_operasyonlar
+            WHERE MusteriSiparisID = :order_id
+        """), {"order_id": order_id})
+
+        operations = []
+        for row in result:
+            operations.append({
+                "name": row.verimlilik_operasyon_adi,
+                "unit_time": row.verimlilik_operasyon_birim_sure,
+                "cut_count": row.verimlilik_operasyon_kesim_sayisi,
+                "unit_time_tol": row.verimlilik_operasyon_birim_sure_tolerans,
+            })
+        return jsonify(operations), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
 @app.route("/get-bantlar", methods=["GET"])
 def get_bantlar():
     try:
         result = db.session.execute(text("SELECT bant_id, bant_tanim FROM v_bantlar"))
-        bantlar = [{"id": row.bant_id, "tanım": row.bant_tanim} for row in result]
+        bantlar = [
+            {
+                "id": row.bant_id, 
+                "tanım": row.bant_tanim
+            }
+            for row in result
+        ]
         return jsonify(bantlar), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

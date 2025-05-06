@@ -10,6 +10,7 @@
 
 #define USER_API_URL "http://192.168.1.35:5000/users"
 #define BANTLAR_API_URL "http://192.168.1.35:5000/get-bantlar"
+#define OPERATION_API_BASE "http://192.168.1.35:5000/operations"
 
 #define TAG "HTTP"
 #define SHA512_SALT "volkan"
@@ -30,3 +31,4 @@ bool validate_user_credentials(const char *username, const char *password);
 //void hash_password_sha512(const char *password, const char *salt, char *output_hex);
 void hash_password_sha512_base64(const char *password, const char *salt, char *output_base64, size_t output_len);
 void fetch_orders_for_bant(int bant_id);
+void fetch_operations_by_order(int order_id);

@@ -90,6 +90,19 @@ static void login_btn_event_cb(lv_event_t * e) {
         fetch_bantlar();                 // API'den bantları çek
         ui_screen_bant_select_init();   // Dinamik ekran oluştur
         lv_disp_load_scr(screen_bant);  // Ekranı göster
+        login_timestamp = time(NULL);
+        // 2) İnsan okunur formata çevir ve yazdır
+        struct tm tm_info;
+        localtime_r(&login_timestamp, &tm_info);
+        ESP_LOGW(TAG,
+            "login_timestamp (human): %04d-%02d-%02d %02d:%02d:%02d",
+            tm_info.tm_year + 1900,
+            tm_info.tm_mon  + 1,
+            tm_info.tm_mday,
+            tm_info.tm_hour,
+            tm_info.tm_min,
+            tm_info.tm_sec
+        );
     } else {
         lv_obj_t *msg = lv_label_create(scrollable_cont);
         lv_label_set_text(msg, "Hatalı kullanıcı adı veya şifre!");
