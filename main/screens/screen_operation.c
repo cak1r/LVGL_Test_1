@@ -8,7 +8,8 @@ static void operation_btn_event_cb(lv_event_t *e) {
     selected_unit_time = op -> unit_time;
     selected_unit_time_tol = op -> unit_time_tol;
     update_count_label(ui_goalDataLabel, 18, 0, 0);
-    ESP_LOGI("debug","selected unit time %d selected unit time tolerans: %d",selected_unit_time, selected_unit_time_tol);
+    ESP_LOGI("debug","selected unit time %d selected unit time tolerans: %d selected cut count: %d",
+        selected_unit_time, selected_unit_time_tol, selected_cut_count);
     lv_disp_load_scr(tileview);
 }
 

@@ -25,7 +25,7 @@ static void update_work_timer_cb(lv_timer_t *timer);
 // ————— Timer Callback —————
 static void update_work_timer_cb(lv_timer_t *timer) {
     (void)timer;
-    update_expected_work_label(ui_counterDataLabel2, login_timestamp);
+    update_expected_work_label(ui_performanceDataLabel, login_timestamp);
     refresh_main_screen();
 }
 
@@ -45,7 +45,7 @@ static void screen_main_loaded_cb(lv_event_t *e) {
 
 // ————— Refresh Fonksiyonu —————
 static void refresh_main_screen(void) {
-    update_expected_work_label(ui_counterDataLabel2, login_timestamp);
+    update_expected_work_label(ui_performanceDataLabel, login_timestamp);
     update_count_label(ui_goalDataLabel, 18, 0, 0);  // Örnek olarak 18:00
     lv_bar_set_value(ui_checkerBar, selected_cut_count, LV_ANIM_OFF);
 
@@ -308,23 +308,23 @@ void ui_screen_main_init(void)
     lv_obj_set_align(ui_leftSideContainer, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_leftSideContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_counterLabel = lv_label_create(ui_leftSideContainer);
-    lv_obj_set_width(ui_counterLabel, 160);
-    lv_obj_set_height(ui_counterLabel, 35);
-    lv_obj_set_x(ui_counterLabel, -30);
-    lv_obj_set_y(ui_counterLabel, -80);
-    lv_obj_set_align(ui_counterLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_counterLabel, "Counter");
-    lv_obj_set_style_text_font(ui_counterLabel, &lv_font_montserrat_30, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_performanceLabel = lv_label_create(ui_leftSideContainer);
+    lv_obj_set_width(ui_performanceLabel, 220);
+    lv_obj_set_height(ui_performanceLabel, 35);
+    lv_obj_set_x(ui_performanceLabel, 0);
+    lv_obj_set_y(ui_performanceLabel, -80);
+    lv_obj_set_align(ui_performanceLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_performanceLabel, "Performans");
+    lv_obj_set_style_text_font(ui_performanceLabel, &lv_font_montserrat_30, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_counterDataLabel2 = lv_label_create(ui_leftSideContainer);
-    lv_obj_set_width(ui_counterDataLabel2, 120);
-    lv_obj_set_height(ui_counterDataLabel2, 30);
-    lv_obj_set_x(ui_counterDataLabel2, -20);
-    lv_obj_set_y(ui_counterDataLabel2, -45);
-    lv_obj_set_align(ui_counterDataLabel2, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_counterDataLabel2, "0");
-    lv_obj_set_style_text_font(ui_counterDataLabel2, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_performanceDataLabel = lv_label_create(ui_leftSideContainer);
+    lv_obj_set_width(ui_performanceDataLabel, 120);
+    lv_obj_set_height(ui_performanceDataLabel, 30);
+    lv_obj_set_x(ui_performanceDataLabel, -20);
+    lv_obj_set_y(ui_performanceDataLabel, -45);
+    lv_obj_set_align(ui_performanceDataLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_performanceDataLabel, "0");
+    lv_obj_set_style_text_font(ui_performanceDataLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_goalLabel = lv_label_create(ui_leftSideContainer);
     lv_obj_set_width(ui_goalLabel, 220);
@@ -418,7 +418,7 @@ void ui_screen_main_init(void)
     lv_obj_set_width(ui_counterDataLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_counterDataLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_counterDataLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_counterDataLabel, "100");
+    lv_label_set_text(ui_counterDataLabel, "0");
     lv_obj_set_style_text_font(ui_counterDataLabel, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_checkerBar = lv_bar_create(ui_mainContainer);

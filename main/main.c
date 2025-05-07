@@ -14,8 +14,10 @@ volatile int pulse_count = 0;  // Pulse sayacı
 static lv_timer_t *counter_timer; // LVGL label güncelleme için timer
 static lv_timer_t *daily_timer;
 static uint32_t last_interrupt_time = 0; // Son tetikleme zamanı (ms)
-
-static bool timer_started = false;  // Timer’ın bir kez başlatıldığını takip edecek
+static long counter = 0;
+static uint32_t last_pulse_time = 0;
+static uint8_t performance = 0;
+void update_performance();
 
 // 📌 **Kesme Servis Fonksiyonu (ISR)**
 void IRAM_ATTR gpio_isr_handler(void* arg) {
@@ -28,13 +30,56 @@ void IRAM_ATTR gpio_isr_handler(void* arg) {
 }
 
 // 📌 **LVGL Label Güncelleme Fonksiyonu**
+
+// 📌 **LVGL Label Güncelleme Fonksiyonu**
 void update_pulse_label(lv_timer_t * timer) {
-    static char buffer[16];  
-    sprintf(buffer, "%d", pulse_count);  // Sayıyı string'e çevir
-    lv_label_set_text(ui_counterDataLabel, buffer);  // Label'ı güncelle
+    uint32_t now = esp_log_timestamp();   // ms cinsinden zaman
+    //ESP_LOGI("COUNTER", "Pulse: %d", pulse_count);
+
+    // Kesim sayısına ulaştıysak ve zaman parametrelerimiz geçerliyse
+    if (pulse_count >= selected_cut_count && selected_unit_time > 0) {
+        // Birim zaman eksi toleransı ms cinsine çevir
+        uint32_t window_ms = 0;
+        if (selected_unit_time > selected_unit_time_tol) {
+            window_ms = (selected_unit_time - selected_unit_time_tol) * 1000;
+        }
+
+        // Aradaki süre yeterli mi?
+        if (now - last_pulse_time >= window_ms) {
+            // Başarılı iş
+            counter++;
+            ESP_LOGI("COUNTER", "Job SUCCESS #%ld", counter);
+            last_pulse_time = now;          // Zamanı sıfırla, yeni iş periyodu başlasın
+        } else {
+            // Süre yetersiz -> başarısız iş
+            ESP_LOGI("COUNTER",
+                     "Job FAIL: elapsed %ld ms < required %ld ms",
+                     now - last_pulse_time, window_ms);
+            last_pulse_time = now;          // Süreyi yine sıfırla, yeni iş periyodu başlasın
+        }
+
+        // Pulse’ları sıfırla (kesim sayısına göre tüketildi)
+        pulse_count = 0;
+
+        // Label’ı güncelle
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%ld", counter);
+        lv_label_set_text(ui_counterDataLabel, buf);
+    }
 }
+
 void daily_goal_update(){
     update_expected_work_label(ui_dailyGoalDataLabel, login_timestamp);
+    update_performance();
+}
+void update_performance(){
+    if (counter != 0 ){
+        performance = (100 * counter) / expected;
+        // Label’ı güncelle
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%d", performance);
+        lv_label_set_text(ui_performanceDataLabel, buf);
+    }
 }
 
 // 📌 **GPIO Kurulumu**
