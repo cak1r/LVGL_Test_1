@@ -8,17 +8,20 @@
 #define MAX_USERNAME_LENGTH 64
 #define MAX_PASSWORD_LENGTH 129
 
-#define USER_API_URL "http://192.168.1.35:5000/users"
-#define BANTLAR_API_URL "http://192.168.1.35:5000/get-bantlar"
-#define OPERATION_API_BASE "http://192.168.1.35:5000/operations"
+#define BASE_IP "http://192.168.1.81:5000"
 
+#define USER_API_URL BASE_IP "/users"
+#define BANTLAR_API_URL BASE_IP "/get-bantlar"
+#define OPERATION_API_BASE BASE_IP "/operations"
+#define POST_DATA_API_URL BASE_IP "/post-data"
+#define ORDER_API_URL BASE_IP "/orders"
 #define TAG "HTTP"
 #define SHA512_SALT "volkan"
 
 typedef struct {
     int id;
     char username[MAX_USERNAME_LENGTH];
-    char hashed_password[MAX_PASSWORD_LENGTH];
+    char hashed_password[MAX_PASSWORD_LENGTH];  
     bool aktif;
 } User;
 
@@ -32,3 +35,13 @@ bool validate_user_credentials(const char *username, const char *password);
 void hash_password_sha512_base64(const char *password, const char *salt, char *output_base64, size_t output_len);
 void fetch_orders_for_bant(int bant_id);
 void fetch_operations_by_order(int order_id);
+
+// Yeni eklenen POST fonksiyonu
+/**
+ * @brief  Sayaç bilgilerini API'ye POST eder
+ * @param  user_id       Kullanıcı ID'si
+ * @param  machine_id    Makine ID'si (string)
+ * @param  operation_id  Operasyon ID'si
+ * @param  counter       Tamamlanan iş adedi
+ */
+void post_operation_data(int user_id, const char *machine_id, int operation_id, int counter);

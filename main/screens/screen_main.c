@@ -21,7 +21,74 @@ static bool timer_started = false;  // timer’ın bir kez başlatıldığını 
 static void refresh_main_screen(void);
 static void screen_main_loaded_cb(lv_event_t *e);
 static void update_work_timer_cb(lv_timer_t *timer);
+// ————— Çalışma için gereken global değişkenler —————
+static lv_obj_t *durus_overlay;
+static lv_obj_t *durus_popup;
+static lv_obj_t *durus_timer_label;
+static lv_timer_t *durus_timer_handle;
+static time_t durus_start_time;
 
+// ————— Sayaç güncelleme callback’i —————
+static void durus_timer_cb(lv_timer_t *timer) {
+    (void)timer;
+    time_t now = time(NULL);
+    uint32_t elapsed = (uint32_t)(now - durus_start_time);
+    uint32_t mins = elapsed / 60;
+    uint32_t secs = elapsed % 60;
+    char buf[16];
+    lv_snprintf(buf, sizeof(buf), "%02lu:%02lu", mins, secs);
+    lv_label_set_text(durus_timer_label, buf);
+}
+
+// ————— Bitir butonu callback’i —————
+static void finish_durus_cb(lv_event_t *e) {
+    // Sayaçı durdur ve popup’ı kapat
+    lv_timer_del(durus_timer_handle);
+    lv_obj_del(durus_overlay);
+    // Gerekirse buraya ana ekrana dönme kodu ekleyin (zaten popup silindikten sonra tileview açık kalır)
+}
+
+// ————— Popup gösterme fonksiyonu —————
+static void show_durus_popup(lv_event_t *e) {
+    // Overlay
+    lv_obj_t *scr = lv_layer_top();
+    durus_overlay = lv_obj_create(scr);
+    lv_obj_set_size(durus_overlay, 800, 480);
+    lv_obj_set_style_bg_color(durus_overlay, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(durus_overlay, LV_OPA_50, 0);
+    lv_obj_clear_flag(durus_overlay, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Popup kutusu
+    durus_popup = lv_obj_create(durus_overlay);
+    lv_obj_set_size(durus_popup, 300, 180);
+    lv_obj_center(durus_popup);
+    lv_obj_set_style_bg_color(durus_popup, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_radius(durus_popup, 8, 0);
+
+    // Başlık
+    lv_obj_t *title = lv_label_create(durus_popup);
+    lv_label_set_text(title, "Durus Basladi");
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
+
+    // Sayaç label’ı
+    durus_timer_label = lv_label_create(durus_popup);
+    lv_label_set_text(durus_timer_label, "00:00");
+    lv_obj_align(durus_timer_label, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_set_style_text_font(durus_timer_label, &lv_font_montserrat_26, 0);
+
+    // Bitir butonu
+    lv_obj_t *finish_btn = lv_btn_create(durus_popup);
+    lv_obj_set_size(finish_btn, 100, 40);
+    lv_obj_align(finish_btn, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_add_event_cb(finish_btn, finish_durus_cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *finish_lbl = lv_label_create(finish_btn);
+    lv_label_set_text(finish_lbl, "Bitir");
+    lv_obj_center(finish_lbl);
+
+    // Sayaç başlangıcı
+    durus_start_time = time(NULL);
+    durus_timer_handle = lv_timer_create(durus_timer_cb, 1000, NULL);
+}
 // ————— Timer Callback —————
 static void update_work_timer_cb(lv_timer_t *timer) {
     (void)timer;
@@ -47,7 +114,7 @@ static void screen_main_loaded_cb(lv_event_t *e) {
 static void refresh_main_screen(void) {
     update_expected_work_label(ui_performanceDataLabel, login_timestamp);
     update_count_label(ui_goalDataLabel, 18, 0, 0);  // Örnek olarak 18:00
-    lv_bar_set_value(ui_checkerBar, selected_cut_count, LV_ANIM_OFF);
+    
 
     time_t now = time(NULL);
     struct tm *tm = localtime(&now);
@@ -160,8 +227,13 @@ void call_maintenance_cb(lv_event_t *e) {
 
 static void confirm_logout_cb(lv_event_t *e) {
     lv_obj_del(popup_overlay);  // popup ve overlay temizle
-
-
+    selected_bant_id = -1;
+    selected_cut_count = -1;
+    selected_order_id = -1;
+    selected_unit_time = -1;
+    selected_unit_time_tol = -1;
+    counter = 0;
+    lv_label_set_text(ui_counterDataLabel,"0");
     lv_textarea_set_text(ta_user, "");
     lv_textarea_set_text(ta_pass, "");
     lv_disp_load_scr(ui_loginScreen);  // login ekranına dön
@@ -175,8 +247,7 @@ static void show_exit_confirmation_popup(void) {
     lv_obj_t *top_layer = lv_layer_top();
     struct tm tm_info;
     localtime_r(&login_timestamp, &tm_info);
-ESP_LOGW("DEBUG",
-    "login_timestamp (main screen): %04d-%02d-%02d %02d:%02d:%02d",
+    ESP_LOGW("DEBUG", "login_timestamp (main screen): %04d-%02d-%02d %02d:%02d:%02d",
     tm_info.tm_year + 1900,
     tm_info.tm_mon  + 1,
     tm_info.tm_mday,
@@ -184,7 +255,7 @@ ESP_LOGW("DEBUG",
     tm_info.tm_min,
     tm_info.tm_sec
 );
-    update_expected_work_label(ui_dailyGoalDataLabel, login_timestamp);
+    //update_expected_work_label(ui_dailyGoalDataLabel, login_timestamp);
     popup_overlay = lv_obj_create(top_layer);
     lv_obj_set_size(popup_overlay, 800, 480);
     lv_obj_set_style_bg_color(popup_overlay, lv_color_hex(0x000000), 0);
@@ -302,7 +373,7 @@ void ui_screen_main_init(void)
     ui_leftSideContainer = lv_obj_create(ui_mainContainer);
     lv_obj_remove_style_all(ui_leftSideContainer);
     lv_obj_set_width(ui_leftSideContainer, 220);
-    lv_obj_set_height(ui_leftSideContainer, 250);
+    lv_obj_set_height(ui_leftSideContainer, 350);
     lv_obj_set_x(ui_leftSideContainer, -274);
     lv_obj_set_y(ui_leftSideContainer, -1);
     lv_obj_set_align(ui_leftSideContainer, LV_ALIGN_CENTER);
@@ -312,7 +383,7 @@ void ui_screen_main_init(void)
     lv_obj_set_width(ui_performanceLabel, 220);
     lv_obj_set_height(ui_performanceLabel, 35);
     lv_obj_set_x(ui_performanceLabel, 0);
-    lv_obj_set_y(ui_performanceLabel, -80);
+    lv_obj_set_y(ui_performanceLabel, -140);
     lv_obj_set_align(ui_performanceLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_performanceLabel, "Performans");
     lv_obj_set_style_text_font(ui_performanceLabel, &lv_font_montserrat_30, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -321,16 +392,16 @@ void ui_screen_main_init(void)
     lv_obj_set_width(ui_performanceDataLabel, 120);
     lv_obj_set_height(ui_performanceDataLabel, 30);
     lv_obj_set_x(ui_performanceDataLabel, -20);
-    lv_obj_set_y(ui_performanceDataLabel, -45);
+    lv_obj_set_y(ui_performanceDataLabel, -105);
     lv_obj_set_align(ui_performanceDataLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_performanceDataLabel, "0");
-    lv_obj_set_style_text_font(ui_performanceDataLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_performanceDataLabel, &lv_font_montserrat_26, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_goalLabel = lv_label_create(ui_leftSideContainer);
     lv_obj_set_width(ui_goalLabel, 220);
     lv_obj_set_height(ui_goalLabel, 35);
     lv_obj_set_x(ui_goalLabel, 0);
-    lv_obj_set_y(ui_goalLabel, 80);
+    lv_obj_set_y(ui_goalLabel, 20);
     lv_obj_set_align(ui_goalLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_goalLabel, "Gunluk Hedef");
     lv_obj_set_style_text_font(ui_goalLabel, &lv_font_montserrat_30, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -339,7 +410,7 @@ void ui_screen_main_init(void)
     lv_obj_set_width(ui_goalDataLabel, 120);
     lv_obj_set_height(ui_goalDataLabel, 30);
     lv_obj_set_x(ui_goalDataLabel, -20);
-    lv_obj_set_y(ui_goalDataLabel, 115);
+    lv_obj_set_y(ui_goalDataLabel, 55);
     lv_obj_set_align(ui_goalDataLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_goalDataLabel, "0");
     lv_obj_set_style_text_font(ui_goalDataLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -348,7 +419,7 @@ void ui_screen_main_init(void)
     lv_obj_set_width(ui_dailyGoalLabel, 220);
     lv_obj_set_height(ui_dailyGoalLabel, 35);
     lv_obj_set_x(ui_dailyGoalLabel, 0);
-    lv_obj_set_y(ui_dailyGoalLabel, 0);
+    lv_obj_set_y(ui_dailyGoalLabel, -60);
     lv_obj_set_align(ui_dailyGoalLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_dailyGoalLabel, "Anlik Hedef");
     lv_obj_set_style_text_font(ui_dailyGoalLabel, &lv_font_montserrat_30, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -357,7 +428,7 @@ void ui_screen_main_init(void)
     lv_obj_set_width(ui_dailyGoalDataLabel, 120);
     lv_obj_set_height(ui_dailyGoalDataLabel, 30);
     lv_obj_set_x(ui_dailyGoalDataLabel, -20);
-    lv_obj_set_y(ui_dailyGoalDataLabel, 35);
+    lv_obj_set_y(ui_dailyGoalDataLabel, -25);
     lv_obj_set_align(ui_dailyGoalDataLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_dailyGoalDataLabel, "0");
     lv_obj_set_style_text_font(ui_dailyGoalDataLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -421,16 +492,24 @@ void ui_screen_main_init(void)
     lv_label_set_text(ui_counterDataLabel, "0");
     lv_obj_set_style_text_font(ui_counterDataLabel, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_PulseLabel = lv_label_create(ui_innerPanel);
+    lv_obj_set_width(ui_PulseLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_PulseLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_PulseLabel, LV_ALIGN_BOTTOM_MID);
+    lv_label_set_text(ui_PulseLabel, "0");
+    lv_obj_set_style_text_font(ui_PulseLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ui_checkerBar = lv_bar_create(ui_mainContainer);
     
-    lv_bar_set_value(ui_checkerBar, 4, LV_ANIM_OFF);
-    lv_bar_set_start_value(ui_checkerBar, 0, LV_ANIM_OFF);
+    lv_bar_set_start_value(ui_checkerBar, 5, LV_ANIM_OFF);
     lv_obj_set_width(ui_checkerBar, 30);
     lv_obj_set_height(ui_checkerBar, 200);
     lv_obj_set_x(ui_checkerBar, 200);
     lv_obj_set_y(ui_checkerBar, -30);
     lv_obj_set_align(ui_checkerBar, LV_ALIGN_CENTER);
-    
+    lv_bar_set_range(ui_checkerBar, 0, 5); 
+    lv_bar_set_value(ui_checkerBar, 5, LV_ANIM_OFF);  // Bar tam dolu başlasın
+
     lv_obj_set_style_bg_color(ui_checkerBar, lv_color_hex(0x0CE92F), LV_PART_INDICATOR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_checkerBar, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
 
@@ -464,15 +543,7 @@ void ui_screen_main_init(void)
     lv_obj_add_event_cb(ui_settingsButton, settings_btn_event_cb, LV_EVENT_CLICKED, NULL);
     lv_obj_set_style_bg_color(ui_settingsButton, lv_color_hex(0xffffff), LV_PART_MAIN);
 
-    // 3x2 kare butonlar (120x120) grid yerleşimi
-    const char *labels[4] = {"DURUS 1","DURUS 2","DURUS 3","DURUS 4",};
-    lv_color_t colors[4] = {
-        lv_color_hex(0x457b9d),
-        lv_color_hex(0xe23838),
-        lv_color_hex(0xf78200),
-        lv_color_hex(0x66b447)
-    };
-
+    // ————— Duruşlar kısmı: 4 buton —————
     int btn_w = 320;
     int btn_h = 145;
     int spacing_x = 20;
@@ -480,27 +551,56 @@ void ui_screen_main_init(void)
     int start_x = 60;
     int start_y = 60;
 
-    for (int i = 0; i < 4; i++) {
-        int col = i % 2;
-        int row = i / 2;
+    // Buton 1
+    lv_obj_t *btn1 = lv_btn_create(tile_durus);
+    lv_obj_set_size(btn1, btn_w, btn_h);
+    lv_obj_align(btn1, LV_ALIGN_TOP_LEFT, start_x, start_y);
+    lv_obj_set_style_bg_color(btn1, lv_color_hex(0x457b9d), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(btn1, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_add_event_cb(btn1, show_durus_popup, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *lbl1 = lv_label_create(btn1);
+    lv_label_set_text(lbl1, "BAKIM");
+    lv_obj_center(lbl1);
+    lv_obj_set_style_text_font(lbl1, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_t *btn = lv_btn_create(tile_durus);
-        lv_obj_set_size(btn, btn_w, btn_h);
-        lv_obj_align(btn, LV_ALIGN_TOP_LEFT,
-            start_x + col * (btn_w + spacing_x),
-            start_y + row * (btn_h + spacing_y));
+    // Buton 2
+    lv_obj_t *btn2 = lv_btn_create(tile_durus);
+    lv_obj_set_size(btn2, btn_w, btn_h);
+    lv_obj_align(btn2, LV_ALIGN_TOP_LEFT,
+                start_x + (btn_w + spacing_x),
+                start_y);
+    lv_obj_set_style_bg_color(btn2, lv_color_hex(0xe23838), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(btn2, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_t *lbl2 = lv_label_create(btn2);
+    lv_label_set_text(lbl2, "YEMEK");
+    lv_obj_center(lbl2);
+    lv_obj_set_style_text_font(lbl2, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_set_style_bg_color(btn, colors[i], LV_PART_MAIN);
-        lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, LV_PART_MAIN);
+    // Buton 3
+    lv_obj_t *btn3 = lv_btn_create(tile_durus);
+    lv_obj_set_size(btn3, btn_w, btn_h);
+    lv_obj_align(btn3, LV_ALIGN_TOP_LEFT,
+                start_x,
+                start_y + (btn_h + spacing_y));
+    lv_obj_set_style_bg_color(btn3, lv_color_hex(0xf78200), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(btn3, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_t *lbl3 = lv_label_create(btn3);
+    lv_label_set_text(lbl3, "KISISEL IHTIYAC");
+    lv_obj_center(lbl3);
+    lv_obj_set_style_text_font(lbl3, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        if (i == 0) {
-            lv_obj_add_event_cb(btn, call_maintenance_cb, LV_EVENT_CLICKED, NULL);
-        }
+    // Buton 4
+    lv_obj_t *btn4 = lv_btn_create(tile_durus);
+    lv_obj_set_size(btn4, btn_w, btn_h);
+    lv_obj_align(btn4, LV_ALIGN_TOP_LEFT,
+                start_x + (btn_w + spacing_x),
+                start_y + (btn_h + spacing_y));
+    lv_obj_set_style_bg_color(btn4, lv_color_hex(0x66b447), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(btn4, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_t *lbl4 = lv_label_create(btn4);
+    lv_label_set_text(lbl4, "DURUS 4");
+    lv_obj_center(lbl4);
+    lv_obj_set_style_text_font(lbl4, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-        lv_obj_t *lbl = lv_label_create(btn);
-        lv_label_set_text(lbl, labels[i]);
-        lv_obj_center(lbl);
-        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
     lv_disp_load_scr(tileview);  // Ekrana tileview'i yükle
 }

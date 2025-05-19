@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 import xml.etree.ElementTree as ET
 import time
 from sqlalchemy import text
+import logging
 
 # ---------- XML AYARLARINI YÜKLE ----------
 def load_db_config_from_xml(file_path):
@@ -48,7 +49,84 @@ class Order(db.Model):
     code = db.Column("MusteriOrderNo", db.String)
     bant_id = db.Column("bant_id", db.Integer)
 
+class OperationRecord(db.Model):
+    __tablename__ = "tblSayacHamVeri"
+    id            = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id       = db.Column(db.Integer, nullable=False)
+    machine_id    = db.Column(db.String(50), nullable=False)
+    operation_id  = db.Column(db.Integer, nullable=False)
+    timestamp     = db.Column(db.Integer, nullable=False)
+    counter       = db.Column(db.Integer, nullable=False)
+
 # ---------- ENDPOINTS ----------
+@app.route("/post-data", methods=["POST"])
+def post_data():
+    # Detailed logging of incoming request
+    app.logger.info(f"Incoming request headers: {request.headers}")
+    app.logger.info(f"Incoming request content type: {request.content_type}")
+    
+    # Raw request data logging
+    raw_data = request.get_data(as_text=True)
+    app.logger.info(f"Raw request data: {raw_data}")
+
+    try:
+        # Attempt to parse JSON with different methods
+        if request.is_json:
+            # Try standard JSON parsing first
+            data = request.get_json()
+        else:
+            # If not JSON, try parsing raw data
+            try:
+                data = json.loads(raw_data)
+            except json.JSONDecodeError:
+                app.logger.error("Failed to parse JSON from request")
+                return jsonify({"error": "Invalid JSON payload"}), 400
+
+        # Validate all required fields
+        required_fields = ["user_id", "machine_id", "operation_id", "counter"]
+        for field in required_fields:
+            if field not in data:
+                app.logger.error(f"Missing required field: {field}")
+                return jsonify({"error": f"Missing field: {field}"}), 400
+
+        # Type checking and conversion
+        try:
+            user_id = int(data["user_id"])
+            machine_id = str(data["machine_id"])
+            operation_id = int(data["operation_id"])
+            counter = int(data["counter"])
+        except (ValueError, TypeError) as e:
+            app.logger.error(f"Type conversion error: {e}")
+            return jsonify({"error": "Invalid data types"}), 400
+
+        # Timestamp handling
+        ts = int(data.get("timestamp", time.time()))
+
+        # Create and save record
+        rec = OperationRecord(
+            user_id=user_id,
+            machine_id=machine_id,
+            operation_id=operation_id,
+            timestamp=ts,
+            counter=counter
+        )
+        db.session.add(rec)
+        db.session.commit()
+
+        return jsonify({"message": "Record saved successfully"}), 200
+
+    except Exception as e:
+        # Comprehensive error logging
+        db.session.rollback()
+        app.logger.error(f"Unexpected error: {str(e)}")
+        app.logger.error(f"Full error details: {e}", exc_info=True)
+        return jsonify({"error": "Internal server error", "details": str(e)}), 500
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+
+
 @app.route("/users", methods=["GET"])
 def get_users():
     try:
@@ -130,38 +208,6 @@ def get_orders_by_bant():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/post-data", methods=["POST"])
-def post_data():
-    try:
-        data = request.get_json()
-        new_entry = SensorData(
-            device_id=data.get("device_id"),
-            temperature=data.get("temperature"),
-            humidity=data.get("humidity"),
-            timestamp=int(time.time())
-        )
-        db.session.add(new_entry)
-        db.session.commit()
-        return jsonify({"message": "Veri kaydedildi"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-@app.route("/get-data", methods=["GET"])
-def get_latest_data():
-    try:
-        latest_entry = SensorData.query.order_by(SensorData.timestamp.desc()).first()
-        if latest_entry:
-            return jsonify({
-                "id": latest_entry.id,
-                "device_id": latest_entry.device_id,
-                "temperature": latest_entry.temperature,
-                "humidity": latest_entry.humidity,
-                "timestamp": latest_entry.timestamp
-            })
-        else:
-            return jsonify({"message": "Veri yok"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 # ---------- BAŞLAT ----------
 if __name__ == "__main__":

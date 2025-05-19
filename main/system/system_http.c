@@ -17,6 +17,87 @@ char current_logged_user[MAX_USERNAME_LENGTH] = "";
 Operation operation_list[MAX_OPERATION_COUNT];
 int operation_count = 0;
 
+void post_operation_data(int user_id, const char *machine_id, int operation_id, int counter) {
+    // 1) Build JSON payload
+    time_t now = time(NULL);                  // NTP‐synced timestamp
+    long ts = (long)now;
+
+    cJSON *root = cJSON_CreateObject();
+    if (!root) {
+        ESP_LOGE(TAG, "Failed to allocate JSON object");
+        return;
+    }
+    
+    // Explicitly add fields with debug logging
+    ESP_LOGI(TAG, "Preparing JSON payload:");
+    ESP_LOGI(TAG, "user_id: %d", user_id);
+    ESP_LOGI(TAG, "machine_id: %s", machine_id);
+    ESP_LOGI(TAG, "operation_id: %d", operation_id);
+    ESP_LOGI(TAG, "timestamp: %ld", ts);
+    ESP_LOGI(TAG, "counter: %d", counter);
+
+    cJSON_AddNumberToObject(root, "user_id", user_id);
+    cJSON_AddStringToObject(root, "machine_id", machine_id);
+    cJSON_AddNumberToObject(root, "operation_id", operation_id);
+    cJSON_AddNumberToObject(root, "timestamp", ts);
+    cJSON_AddNumberToObject(root, "counter", counter);
+
+    char *body = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
+    if (!body) {
+        ESP_LOGE(TAG, "Failed to print JSON");
+        return;
+    }
+
+    // Debug: print full JSON payload
+    ESP_LOGI(TAG, "Full JSON payload: %s", body);
+
+    // 2) Configure and send HTTP POST
+    esp_http_client_config_t config = {
+        .url         = POST_DATA_API_URL,
+        .method      = HTTP_METHOD_POST,
+        .timeout_ms  = 5000,
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    if (!client) {
+        ESP_LOGE(TAG, "esp_http_client_init failed");
+        free(body);
+        return;
+    }
+
+    // Explicitly set Content-Type header
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_post_field(client, body, strlen(body));
+
+    esp_err_t err = esp_http_client_open(client, strlen(body));
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "HTTP open failed: %s", esp_err_to_name(err));
+        esp_http_client_cleanup(client);
+        free(body);
+        return;
+    }
+
+    // Send the request
+    int write_len = esp_http_client_write(client, body, strlen(body));
+    ESP_LOGI(TAG, "Bytes written: %d", write_len);
+
+    // Get response
+    int status = esp_http_client_get_status_code(client);
+    ESP_LOGI(TAG, "POST %s → %d", POST_DATA_API_URL, status);
+
+    // Optional: read response body for more details
+    char response_buffer[512];
+    int read_len = esp_http_client_read(client, response_buffer, sizeof(response_buffer) - 1);
+    if (read_len > 0) {
+        response_buffer[read_len] = '\0';
+        ESP_LOGI(TAG, "Response body: %s", response_buffer);
+    }
+
+    // 3) Cleanup
+    esp_http_client_cleanup(client);
+    free(body);
+}
+
 void fetch_operations_by_order(int order_id) {
     operation_count = 0;
     char url[256];
@@ -132,7 +213,8 @@ void fetch_operations_by_order(int order_id) {
 void fetch_orders_for_bant(int bant_id) {
     order_count = 0;
     char url[128];
-    snprintf(url, sizeof(url), "http://192.168.1.35:5000/orders?bant_id=%d", bant_id);
+   
+    snprintf(url, sizeof(url), "%s?bant_id=%d", ORDER_API_URL, bant_id);
 
     esp_http_client_config_t config = {
         .url = url,
@@ -341,7 +423,7 @@ void fetch_user_list(void) {
 
     user_count = index;
     ESP_LOGI(TAG, "🎯 Toplam kullanıcı: %d", user_count);
-
+        
     cJSON_Delete(root);
     free(buffer);
     esp_http_client_cleanup(client);
@@ -355,7 +437,9 @@ bool validate_user_credentials(const char *username, const char *password) {
         if (user_list[i].aktif &&
             strcmp(user_list[i].username, username) == 0 &&
             strcmp(user_list[i].hashed_password, hashed_input) == 0) {
-            
+            ESP_LOGI("LOGIN","pass: %s",hashed_input);
+            // store both the username *and* the id
+            current_logged_user_id = user_list[i].id;
             strncpy(current_logged_user, username, MAX_USERNAME_LENGTH - 1);
             current_logged_user[MAX_USERNAME_LENGTH - 1] = '\0';
             return true;

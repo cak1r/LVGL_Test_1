@@ -19,7 +19,9 @@ int selected_cut_count;
 int selected_unit_time;
 int selected_unit_time_tol = 0;
 int expected = 0;
-
+long counter = 0;
+int current_logged_user_id = -1;
+char global_machine_name[100]; 
 Bant bant_list[MAX_BANT_COUNT];
 int bant_count = 0;
 int selected_bant_id = -1;
@@ -72,6 +74,7 @@ lv_obj_t * ui_counterContainer;
 lv_obj_t * ui_outerPanel;
 lv_obj_t * ui_innerPanel;
 lv_obj_t * ui_counterDataLabel;
+lv_obj_t * ui_PulseLabel;
 lv_obj_t * ui_checkerBar;
 lv_obj_t * ui_footerContainer;
 lv_obj_t * ui_Image1;

@@ -52,13 +52,15 @@ extern int bant_count;
 extern int selected_bant_id;
 //update daily goal variable
 extern int expected;
-
+extern long counter;
 extern Operation operation_list[MAX_OPERATION_COUNT];
 extern int operation_count;
-
+extern int current_logged_user_id;
 extern int selected_cut_count;
 extern int selected_unit_time;
 extern int selected_unit_time_tol;
+extern char global_machine_name[100];  // You can adjust the size as necessary
+
 extern void update_count_label(lv_obj_t *label, int hour, int minute, int second);
 // SCREEN: ui_LoadingScreen
 void ui_screen_loading_init(void);
@@ -100,6 +102,7 @@ extern lv_obj_t * ui_counterContainer;
 extern lv_obj_t * ui_outerPanel;
 extern lv_obj_t * ui_innerPanel;
 extern lv_obj_t * ui_counterDataLabel;
+extern lv_obj_t * ui_PulseLabel;
 extern lv_obj_t * ui_checkerBar;
 extern lv_obj_t * ui_footerContainer;
 extern lv_obj_t * ui_Image1;

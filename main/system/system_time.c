@@ -22,7 +22,7 @@ void obtain_time() {
     time_t now = 0;
     struct tm timeinfo = { 0 };
     int retry = 0;
-    const int retry_count = 10;
+    const int retry_count = 100;
 
     while (timeinfo.tm_year < (2020 - 1900) && ++retry < retry_count) {
         ESP_LOGI("NTP", "Saat bilgisi bekleniyor (%d/%d)...", retry, retry_count);

@@ -86,7 +86,10 @@ static void login_btn_event_cb(lv_event_t * e) {
     const char * pass = lv_textarea_get_text(ta_pass);
 
     if (validate_user_credentials(user, pass)) {
-        ESP_LOGI("LOGIN", "Giriş başarılı: %s", user);
+        ESP_LOGI("LOGIN",
+            "Giriş başarılı: %s (id=%d)",
+            user,
+            current_logged_user_id);
         fetch_bantlar();                 // API'den bantları çek
         ui_screen_bant_select_init();   // Dinamik ekran oluştur
         lv_disp_load_scr(screen_bant);  // Ekranı göster
@@ -103,6 +106,7 @@ static void login_btn_event_cb(lv_event_t * e) {
             tm_info.tm_min,
             tm_info.tm_sec
         );
+        counter = 0;
     } else {
         lv_obj_t *msg = lv_label_create(scrollable_cont);
         lv_label_set_text(msg, "Hatalı kullanıcı adı veya şifre!");
