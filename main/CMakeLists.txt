@@ -1,8 +1,12 @@
+
 idf_component_register(
     SRCS
         # Main Folder
         main.c
         waveshare_rgb_lcd_port.c
+        
+        #ping
+        #ping/ping_test.c
 
         # Ekranlar (screens)
         screens/screen_login.c

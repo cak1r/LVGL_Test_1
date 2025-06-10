@@ -2,6 +2,7 @@
 #include "waveshare_rgb_lcd_port.h"
 #include "ui/ui.h"
 #include "system_wifi.h"
+#include "system_wifi.c"
 #include "system_time.h"
 #include "nvs_flash.h"
 #include "freertos/FreeRTOS.h"
@@ -10,6 +11,7 @@
 #include "system_http.h"
 #include "esp_efuse.h"
 #include "esp_mac.h" 
+#include "ping/ping_test.h"
 
 #define PULSE_GPIO 6  // GPIO6'dan pulse okuyacağız
 #define DEBOUNCE_TIME_MS 1500  // 1500ms içinde yalnızca bir sayım yapılabilir
@@ -135,6 +137,26 @@ void lvgl_timer_task(void *pvParameters) {
         vTaskDelay(pdMS_TO_TICKS(5));  // 5ms bekle
     }
 }
+static void wifiInitTask( void *pvParameters){
+    wifi_init();  // 🌐 Wi-Fi başlat
+    while (1)
+    {
+        ESP_LOGI("wifi_task","wifi init taskı");
+        vTaskDelay(pdMS_TO_TICKS(10000));
+    }
+    
+}
+static void LCDTask( void *pvParameters){
+    waveshare_esp32_s3_rgb_lcd_init(); // Initialize the Waveshare ESP32-S3 RGB LCD
+
+
+    while (1)
+    {
+        ESP_LOGI("LCD TASK","lcd taskı");
+        vTaskDelay(pdMS_TO_TICKS(10000));
+    }
+    
+}
 
 static void log_login_time_task(void *pvParameters) {
     (void)pvParameters;
@@ -159,6 +181,27 @@ static void log_login_time_task(void *pvParameters) {
     }
 }
 
+void uiInitTask(void *pvParameters) {
+    // ⚠️ WiFi bağlantısı başlamadan bu UI kurulum yapılmamalıysa, önceden vTaskDelay() veya bir sinyal kullanılabilir.
+
+    vTaskDelay(pdMS_TO_TICKS(20000));  // Örnek: 2 saniye sonra çalışsın
+
+    if (lvgl_port_lock(-1)) {
+        ESP_LOGI("UI", "LVGL UI initializing...");
+
+        ui_init();  
+        start_time_update_task();
+        init_pulse_counter();  
+        daily_goal_update_init();
+
+        lvgl_port_unlock();
+
+        ESP_LOGI("UI", "LVGL UI initialization done.");
+    }
+
+    vTaskDelete(NULL);  // Görev bitti, kendini sonlandır
+}
+
 void app_main() {   
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -166,6 +209,7 @@ void app_main() {
         ret = nvs_flash_init();
     }
     esp_log_level_set("esp_tls", ESP_LOG_DEBUG);
+    waveshare_esp32_s3_rgb_lcd_init(); // Initialize the Waveshare ESP32-S3 RGB LCD
 
     ESP_ERROR_CHECK(ret);
      /*// MAC adresi için buffer
@@ -177,13 +221,13 @@ void app_main() {
     } else {
         ESP_LOGE(TAG, "MAC adresi okunamadı (err=%d)", err);
     }*/
+    ESP_LOGI("**Debug", "point 4"); // Debug
+    xTaskCreatePinnedToCore(uiInitTask, "ui_task", 8192, NULL, 8, NULL, 1);
 
-    wifi_init();  // 🌐 Wi-Fi başlat
-    obtain_time(); // ⏰ NTP sunucusundan saat al
-    
-    waveshare_esp32_s3_rgb_lcd_init(); // Initialize the Waveshare ESP32-S3 RGB LCD
+    //obtain_time(); // ⏰ NTP sunucusundan saat al
     ESP_LOGI(TAG, "Display LVGL demos");
-    
+    //ESP_ERROR_CHECK(example_connect());
+    /*
     // Lock the mutex due to the LVGL APIs are not thread-safe
     if (lvgl_port_lock(-1)) {
         ui_init();  // UI'yi başlat
@@ -191,5 +235,8 @@ void app_main() {
         init_pulse_counter();  // Pulse sayacı başlat  
         daily_goal_update_init();
         lvgl_port_unlock();
-    }
+    }*/
+       xTaskCreatePinnedToCore(wifiInitTask, "*wifi task", 16000, NULL, 22, NULL, 0);
+
 }
+

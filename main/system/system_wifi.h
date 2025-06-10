@@ -7,8 +7,8 @@
 #include "nvs_flash.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
-#define TAG "MAC_ADDRESS"
+#include "esp_netif.h"
+#define TAG1 "MAC_ADDRESS"
 
 // Wi-Fi MAC adresini almak için:
 void get_wifi_mac_address();

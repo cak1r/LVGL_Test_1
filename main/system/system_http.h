@@ -8,7 +8,7 @@
 #define MAX_USERNAME_LENGTH 64
 #define MAX_PASSWORD_LENGTH 129
 
-#define BASE_IP "http://192.168.1.81:5000"
+#define BASE_IP "http://192.168.3.4:5000"
 
 #define USER_API_URL BASE_IP "/users"
 #define BANTLAR_API_URL BASE_IP "/get-bantlar"

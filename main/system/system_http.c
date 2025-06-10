@@ -18,6 +18,8 @@ Operation operation_list[MAX_OPERATION_COUNT];
 int operation_count = 0;
 
 void post_operation_data(int user_id, const char *machine_id, int operation_id, int counter) {
+    uint32_t start_time = esp_log_timestamp();  // İşlem başlangıcını al
+
     // 1) Build JSON payload
     time_t now = time(NULL);                  // NTP‐synced timestamp
     long ts = (long)now;
@@ -28,7 +30,7 @@ void post_operation_data(int user_id, const char *machine_id, int operation_id, 
         return;
     }
     
-    // Explicitly add fields with debug logging
+    // JSON verisini oluştur
     ESP_LOGI(TAG, "Preparing JSON payload:");
     ESP_LOGI(TAG, "user_id: %d", user_id);
     ESP_LOGI(TAG, "machine_id: %s", machine_id);
@@ -65,7 +67,7 @@ void post_operation_data(int user_id, const char *machine_id, int operation_id, 
         return;
     }
 
-    // Explicitly set Content-Type header
+    // Set header and send HTTP POST
     esp_http_client_set_header(client, "Content-Type", "application/json");
     esp_http_client_set_post_field(client, body, strlen(body));
 
@@ -96,7 +98,12 @@ void post_operation_data(int user_id, const char *machine_id, int operation_id, 
     // 3) Cleanup
     esp_http_client_cleanup(client);
     free(body);
+
+    // İşlem süresini hesapla
+    uint32_t end_time = esp_log_timestamp();  // İşlem tamamlandıktan sonra zaman al
+    ESP_LOGI(TAG, "POST işlemi tamamlandı, Süre: %ld ms", end_time - start_time);
 }
+
 
 void fetch_operations_by_order(int order_id) {
     operation_count = 0;

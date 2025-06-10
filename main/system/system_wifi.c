@@ -1,7 +1,7 @@
 #include "system_wifi.h"
 
-#define WIFI_SSID "CAKIRCA"  // 📌 Wi-Fi SSID
-#define WIFI_PASS "qaz-wsx-edc-123" // 📌 Wi-Fi Şifresi
+#define WIFI_SSID "sayac"  // 📌 Wi-Fi SSID
+#define WIFI_PASS "sayac123" // 📌 Wi-Fi Şifresi
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data) {
@@ -18,18 +18,21 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     uint8_t mac[6];
     esp_err_t err = esp_wifi_get_mac(ESP_IF_WIFI_STA, mac);  // Wi-Fi STA (istemci) interface için MAC adresi
     if (err == ESP_OK) {
-        ESP_LOGI(TAG, "Wi-Fi MAC Adresi: %02X:%02X:%02X:%02X:%02X:%02X",
+        ESP_LOGI(TAG1, "Wi-Fi MAC Adresi: %02X:%02X:%02X:%02X:%02X:%02X",
                  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     } else {
-        ESP_LOGE(TAG, "Wi-Fi MAC adresi okunamadı (err=%d)", err);
+        ESP_LOGE(TAG1, "Wi-Fi MAC adresi okunamadı (err=%d)", err);
     }
 }
 
 void wifi_init() {
+    ESP_LOGI("**WiFi", "Wi-Fi debug started!");
+
     ESP_ERROR_CHECK(nvs_flash_init());
     esp_netif_init();
     esp_event_loop_create_default();
     esp_netif_create_default_wifi_sta();
+    ESP_LOGI("**WiFi", "Wi-Fi debug 1");
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&cfg);
@@ -50,4 +53,6 @@ void wifi_init() {
     esp_wifi_start();
     ESP_ERROR_CHECK( esp_wifi_set_ps(WIFI_PS_NONE));
     get_wifi_mac_address();
+    ESP_LOGW("WiFi", "Wi-Fi Succesfuly inited");
+
 }

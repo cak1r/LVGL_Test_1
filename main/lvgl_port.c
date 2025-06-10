@@ -535,13 +535,14 @@ esp_err_t lvgl_port_init(esp_lcd_panel_handle_t lcd_handle, esp_lcd_touch_handle
 
     ESP_LOGI(TAG, "Create LVGL task"); // Log task creation
     BaseType_t core_id = (LVGL_PORT_TASK_CORE < 0) ? tskNO_AFFINITY : LVGL_PORT_TASK_CORE; // Determine core ID for the task
+    ESP_LOGI("**Debug", "point 1"); // Debug
     BaseType_t ret = xTaskCreatePinnedToCore(lvgl_port_task, "lvgl", LVGL_PORT_TASK_STACK_SIZE, NULL,
                                              LVGL_PORT_TASK_PRIORITY, &lvgl_task_handle, core_id); // Create the LVGL task
     if (ret != pdPASS) {
         ESP_LOGE(TAG, "Failed to create LVGL task"); // Log error if task creation fails
         return ESP_FAIL; // Return failure
     }
-
+    ESP_LOGI("**Debug", "point 2"); // Debug
     return ESP_OK; // Return success
 }
 
